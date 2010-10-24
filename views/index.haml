@@ -1,0 +1,13 @@
+!!! 5
+
+%meta(charset="utf-8")
+%title= title
+
+%table
+  - list.each do |(path, name, size, type, mtime)|
+    %tr
+      %td.name
+        %a.path(href="#{ path }")= name
+      %td.size= size
+      %td.type= type
+      %td.mtime= mtime

@@ -1,0 +1,25 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    haml (3.0.22)
+    nokogiri (1.4.3.1)
+    rack (1.2.1)
+    rack-test (0.5.6)
+      rack (>= 1.0)
+    riot (0.12.0)
+      rr
+      term-ansicolor
+    rr (1.0.0)
+    sinatra (1.0)
+      rack (>= 1.0)
+    term-ansicolor (1.0.5)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  haml
+  nokogiri
+  rack-test
+  riot
+  sinatra

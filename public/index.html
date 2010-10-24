@@ -1,0 +1,37 @@
+<!DOCTYPE html> 
+<meta charset='utf-8' /> 
+<title></title> 
+
+<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js' type='text/javascript'></script>
+<script src='/javascripts/jquery.cookie.js' type='text/javascript'></script>
+
+<script src='/javascripts/webdav_methods.js' type='text/javascript'></script>
+<script src='/javascripts/controller.js' type='text/javascript'></script>
+<script src='/javascripts/application.js' type='text/javascript'></script>
+
+<form id="left">
+    <input type="hidden">
+    <select name="dirname"></select>
+    <input name="pattern" type="text">
+    <input type="submit" default>
+    <table class="list"></table>
+</form>
+<form id="right">
+    <input type="hidden">
+    <select name="dirname"></select>
+    <input name="pattern" type="text">
+    <input type="submit" default>
+    <table class="list"></table>
+</form>
+
+<script type="text/javascript" charset="utf-8">
+    Controller['application/javascript'] = function(url) {
+        
+    };
+    Controller['text/plain'] = function(url) {
+        
+    };
+    Controller['text/html'] = function(url) {
+        
+    };
+</script>
