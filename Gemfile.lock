@@ -10,9 +10,11 @@ GEM
       rr
       term-ansicolor
     rr (1.0.0)
-    sinatra (1.0)
-      rack (>= 1.0)
+    sinatra (1.1.0)
+      rack (~> 1.1)
+      tilt (~> 1.1)
     term-ansicolor (1.0.5)
+    tilt (1.1)
 
 PLATFORMS
   ruby
