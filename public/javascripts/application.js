@@ -25,7 +25,7 @@ jQuery(function($) {
 		});
 		$('INPUT[name="pattern"]', this).val(pattern);
 
-		$TABLE.html(TBODY)
+		$TABLE.html(TBODY);
     }).each(function() {
 		var id = $(this).attr('id'), href = $.cookie(id);
 		if (href == null) href = location.href + '*';
@@ -35,7 +35,7 @@ jQuery(function($) {
 
 		var href = location.href;
 		var pattern = $('INPUT[name="pattern"]', this).val();
-		if (pattern.length == 0) pattern = '*'
+		if (pattern.length == 0) pattern = '*';
 
 		href += $('SELECT[name="dirname"]', this).val();
 		href += pattern;
