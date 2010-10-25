@@ -18,7 +18,7 @@ class WebDAV < ::Sinatra::Base
   # Static type for directories.
   DIRECTORY_TYPE = 'directory'
 
-  # For the time being we use the Class 1 compliance class until we support
+  # For the time being we use the DAV 1 compliance class until we support
   # the LOCK methods.
   #
   # Add methods in the 'Allow' header when we support them.
