@@ -19,10 +19,14 @@ jQuery(function($) {
 		    dirnames = path.split('/'),
 		    pattern  = dirnames.pop().replace(/\*/, '');
 
+		dirnames.shift();
+		$('<OPTION>').val('/').html('/').prependTo($SELECT);
+
 		$.each(dirnames, function(i) {
-			var path = dirnames.slice(0, i).join('/') + '/', html = this + '/';
+			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/', html = this + '/';
 			$('<OPTION>').val(path).html(html).prependTo($SELECT);
 		});
+
 		$('INPUT[name="pattern"]', this).val(pattern);
 
 		$TABLE.html(TBODY);
@@ -33,7 +37,7 @@ jQuery(function($) {
 	}).submit(function(e) {
 		e.preventDefault();
 
-		var href = location.href;
+		var href = location.href.replace(/\/$/, '');
 		var pattern = $('INPUT[name="pattern"]', this).val();
 		if (pattern.length == 0) pattern = '*';
 
