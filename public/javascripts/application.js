@@ -7,12 +7,14 @@ jQuery(function($) {
 
 	var $columns = $('#left, #right');
 
-    $columns.bind('webdav.directory', function(event, href, TBODY) {
-		var $SELECT = $('SELECT[name="dirname"]', this),
-			$TABLE = $('TABLE', this);
+    $columns.bind('webdav.directory', function(event, href, data) {
+		var $UL = $('.breadcrumb', this),
+			$TABLE = $('.data table', this);
 
-		$SELECT.empty();
-		$TABLE.empty();
+		console.log(href, data);
+		console.log($TABLE);
+
+		$UL.empty();
 
 		$.cookie($(this).attr('id'), href);
 		var path     = href.substr(href.indexOf('/', 8)),
@@ -20,36 +22,51 @@ jQuery(function($) {
 		    pattern  = dirnames.pop().replace(/\*/, '');
 
 		dirnames.shift();
-		$('<OPTION>').val('/').html('/').prependTo($SELECT);
+		$('<LI><A HREF="/*">/</A></LI>').prependTo($UL);
 
 		$.each(dirnames, function(i) {
-			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/', html = this + '/';
-			$('<OPTION>').val(path).html(html).prependTo($SELECT);
+			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/*',
+				html = this + '/',
+				$A = $('<A>').attr('href', path).html(html);
+
+			$('<LI>').append($A).prependTo($UL);
 		});
+		$UL.children(':first-child').addClass('first');
 
 		$('INPUT[name="pattern"]', this).val(pattern);
 
-		$TABLE.html(TBODY);
+		$TABLE.html(data);
     }).each(function() {
 		var id = $(this).attr('id'), href = $.cookie(id);
 		if (href == null) href = location.href + '*';
 		Controller('directory').apply(this, [href]);
-	}).submit(function(e) {
-		e.preventDefault();
-
-		var href = location.href.replace(/\/$/, '');
-		var pattern = $('INPUT[name="pattern"]', this).val();
-		if (pattern.length == 0) pattern = '*';
-
-		href += $('SELECT[name="dirname"]', this).val();
-		href += pattern;
-
-		Controller('directory').apply(this, [href]);
-	}).change(function(e) {
-		$(e.target).parent().submit();
+	}).click(function(e) {
+		var $$ = $(this), hasFocus = $$.is('.focus');
+		if (!hasFocus) {
+			$columns.removeClass('focus');
+			$$.addClass('focus');
+		}
 	});
 
-	$columns.children('TABLE').click(function(e) {
+	$.breadcrumb = $('.breadcrumb');
+	$.breadcrumb.click(function(e) {
+		e.preventDefault();
+
+		var $$ = $(this), isActive = $$.is('.active');
+		if (isActive) {
+			var TABLE = $(this).parent().find('.data').get(0);
+			Controller('directory').apply(TABLE, [e.target.href]);
+		} else {
+			$$.addClass('active');
+			e.stopPropagation();
+		}
+	});
+	$(document).click(function(e) {
+		var isActive = $.breadcrumb.is('.active');
+		if (isActive) $.breadcrumb.removeClass('active');
+	});
+
+	$columns.find('.data').click(function(e) {
 		e.preventDefault();
 
 		var isAnchor = $(e.target).is('A');
@@ -57,6 +74,8 @@ jQuery(function($) {
 			var A    = e.target,
 				$A   = $(A),
 				type = $A.parents('TR').children('.type').text();
+
+			if (type.length == 0) type = 'directory';
 
 			Controller(type).apply(this, [A.href]);
 		}
