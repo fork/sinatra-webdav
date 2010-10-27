@@ -18,13 +18,13 @@ jQuery(function($) {
 		    dirnames = path.split('/'),
 		    pattern  = dirnames.pop().replace(/\*/, '');
 
-		$('<LI><A HREF="/*">/</A></LI>').prependTo($UL);
+		$('<LI><A CLASS="button" HREF="/*">/</A></LI>').prependTo($UL);
 		dirnames.shift();
 
 		$.each(dirnames, function(i) {
 			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/*',
 				html = this + '/',
-				$A = $('<A>').attr('href', path).html(html);
+				$A = $('<A CLASS="button">').attr('href', path).html(html);
 
 			$('<LI>').append($A).prependTo($UL);
 		});

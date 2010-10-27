@@ -30,24 +30,13 @@ body {
 	right: 0;
 	top: 0;
 }
-#divider {
-	margin: auto;
-	width: 4px;
-}
-#divider span {
-	bottom: 30px;
-	cursor: col-resize;
-	position: absolute;
-	top: 10px;
-	width: 4px;
-}
 #right .margin {
-	left: 2px;
+	left: 0;
 	right: 10px;
 }
 #left .margin {
 	left: 10px;
-	right: 2px;
+	right: 3px;
 }
 .margin {
 	border-left: 1px solid lightgrey;
@@ -69,24 +58,7 @@ body {
 	display: none;
 }
 .breadcrumb a {
-	background-color: lightgrey;
-	color: black;
 	display: block;
-	padding: 4px 8px;
-	text-shadow: 1px 1px 1px #FFF;
-}
-.breadcrumb a:hover {
-	background-color: dimgray;
-	color: white;
-	text-shadow: 1px 1px 1px #000;
-}
-.breadcrumb.active a:hover {
-	background-color: gray;
-}
-.breadcrumb.active a {
-	background-color: dimgray;
-	color: white;
-	text-shadow: 1px 1px 1px #000;
 }
 .breadcrumb li.first, .breadcrumb.active li {
 	display: list-item;
@@ -141,4 +113,31 @@ tr:hover td {
 .mtime {
 	width: 30%;
 	text-align: center;
+}
+#divider {
+	margin: auto;
+	width: 4px;
+}
+#divider span {
+	bottom: 30px;
+	cursor: col-resize;
+	position: absolute;
+	top: 10px;
+	width: 4px;
+}
+#toolbar {
+	bottom: 12px;
+	left: 10px;
+	position: absolute;
+}
+
+.button {
+	background-color: dimgray;
+	color: white;
+	cursor: pointer;
+	padding: 4px 8px;
+	text-shadow: 1px 1px 1px #000;
+}
+.button:hover {
+	background-color: gray;
 }
