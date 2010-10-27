@@ -7,7 +7,7 @@ jQuery(function($) {
 
 	var $columns = $('#left, #right');
 
-    $columns.bind('webdav.directory', function(event, href, data) {
+    $columns.bind('webdav.directory', function(e, href, data) {
 		$('.data table', this).html(data);
 	}).bind('webdav.directory', function(e, href) {
 		var $UL = $('.breadcrumb', this);
