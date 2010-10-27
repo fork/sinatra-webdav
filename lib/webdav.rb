@@ -25,7 +25,7 @@ class WebDAV < ::Sinatra::Base
   # Add methods in the 'Allow' header when we support them.
   #
   # see http://www.webdav.org/specs/rfc4918.html#rfc.section.18
-  OPTIONS_HEADER = { 'DAV' => '1', 'Allow' => 'OPTIONS, HEAD, GET, MKCOL' }
+  OPTIONS_HEADER = { 'DAV' => '1', 'Allow' => 'OPTIONS, HEAD, GET, MKCOL, PUT, DELETE, COPY' }
 
   route 'OPTIONS', '/*' do
     headers OPTIONS_HEADER
@@ -40,13 +40,44 @@ class WebDAV < ::Sinatra::Base
   #   response (ok, forbidden, ...)
   # end
 
-  route 'MKCOL', '/*/' do
+  route 'MKCOL', '/*' do
     path = File.join options.public, params[:splat][0]
 
     forbidden if path.include? STAR
-    not_allowed if File.exists? path or not File.exists? File.dirname(path)
+    conflict if not File.exists? File.dirname(path)
+    not_allowed if File.exists? path
+    unsupported if request.body.size > 0
 
     Dir.mkdir path
+
+    ok
+  end
+
+  route 'COPY', '*' do
+    source = File.join options.public, params[:splat][0]
+    dest = File.join options.public, URI.parse(request.env['HTTP_DESTINATION']).path
+
+    Dir.mkdir dest if File.directory?(source) and not File.exist?(dest)
+
+    FileUtils.cp_r source, dest
+    
+    ok
+  end
+
+  put '/*' do
+    path = File.join options.public, params[:splat][0]
+    not_found unless File.exists? File.dirname(path)
+
+    write request.body, path
+
+    created
+  end
+
+  delete '/*' do
+    path = File.join options.public, params[:splat][0]
+
+    not_found unless File.exists? path
+    FileUtils.rmtree path
 
     ok
   end
@@ -98,11 +129,34 @@ class WebDAV < ::Sinatra::Base
   def ok
     halt 200
   end
+  def created
+    halt 201
+  end
   def forbidden
     error 403
   end
   def not_allowed
     error 405
+  end
+  def conflict
+    error 409
+  end
+  def unsupported
+    error 415
+  end
+
+  def write(io, path)
+    tempfile = "#{ path }.#{ Process.pid }.#{ Thread.current.object_id }"
+
+    open(tempfile, 'wb') do |file|
+      while part = io.read(8192)
+        file << part
+      end
+    end
+
+    File.rename(tempfile, path)
+  ensure
+    File.unlink(tempfile) rescue nil
   end
 
 end
