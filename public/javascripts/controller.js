@@ -10,7 +10,7 @@
 	Controller['directory'] = function(url) {
 		var $$ = $(this);
 		WebDAV.GET(url, function(html) {
-			var data = $(html).filter('TABLE').html();
+			var data = $(html).filter('.data').html();
 			$$.trigger('webdav.directory', [url, data]);
 		});
 	};

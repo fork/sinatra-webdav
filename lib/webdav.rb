@@ -1,4 +1,5 @@
 Bundler.require
+require "#{ File.dirname __FILE__ }/sinatra/templates/slim"
 
 # Sinatra based WebDAV implementation
 #
@@ -82,20 +83,22 @@ class WebDAV < ::Sinatra::Base
   end
 
   get '/*' do
-    glob = make_glob params[:splat].first
+    root = options.public
+    glob = make_glob params[:splat].first, root
 
     forbidden if glob.include? STARS
     not_found unless glob.include? STAR or File.exists? glob
 
-    list = Dir[glob].map! { |path| file_values path }
+    list = Dir[glob].map! { |path| file_values path, root }
+    path = glob[root.length..-1]
 
-    haml :index, :locals => {
-      :title => "/#{ glob }",
+    slim :index, :locals => {
+      :title => "/#{ path }",
       :list => list
     }
   end
 
-  def make_glob(path, root = options.public)
+  def make_glob(path, root)
     path   += SPACE
     dirname = File.dirname path
     pattern = File.basename path
@@ -104,7 +107,7 @@ class WebDAV < ::Sinatra::Base
 
     File.join root, dirname, pattern
   end
-  def file_values(path, root = options.public)
+  def file_values(path, root)
     stat  = File.stat path
     path  = path[root.length..-1]
     name  = File.basename path
