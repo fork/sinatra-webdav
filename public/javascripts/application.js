@@ -8,12 +8,9 @@ jQuery(function($) {
 	var $columns = $('#left, #right');
 
     $columns.bind('webdav.directory', function(event, href, data) {
-		var $UL = $('.breadcrumb', this),
-			$TABLE = $('.data table', this);
-
-		console.log(href, data);
-		console.log($TABLE);
-
+		$('.data table', this).html(data);
+	}).bind('webdav.directory', function(e, href) {
+		var $UL = $('.breadcrumb', this);
 		$UL.empty();
 
 		$.cookie($(this).attr('id'), href);
@@ -21,8 +18,8 @@ jQuery(function($) {
 		    dirnames = path.split('/'),
 		    pattern  = dirnames.pop().replace(/\*/, '');
 
-		dirnames.shift();
 		$('<LI><A HREF="/*">/</A></LI>').prependTo($UL);
+		dirnames.shift();
 
 		$.each(dirnames, function(i) {
 			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/*',
@@ -34,8 +31,6 @@ jQuery(function($) {
 		$UL.children(':first-child').addClass('first');
 
 		$('INPUT[name="pattern"]', this).val(pattern);
-
-		$TABLE.html(data);
     }).each(function() {
 		var id = $(this).attr('id'), href = $.cookie(id);
 		if (href == null) href = location.href + '*';
