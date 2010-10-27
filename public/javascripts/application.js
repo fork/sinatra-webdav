@@ -31,7 +31,7 @@ jQuery(function($) {
 		$UL.children(':first-child').addClass('first');
 
 		$('INPUT[name="pattern"]', this).val(pattern);
-    }).each(function() {
+    }).data('index', 0).each(function() {
 		var id = $(this).attr('id'), href = $.cookie(id);
 		if (href == null) href = location.href + '*';
 		Controller('directory').apply(this, [href]);
@@ -64,6 +64,9 @@ jQuery(function($) {
 	$columns.find('.data').click(function(e) {
 		e.preventDefault();
 
+		$TR = $('TR', this).removeClass('selected').has(e.target);
+		$TR.addClass('selected');
+		
 		var isAnchor = $(e.target).is('A');
 		if (isAnchor) {
 			var A    = e.target,
