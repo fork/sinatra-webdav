@@ -53,7 +53,7 @@ class WebDAV < ::Sinatra::Base
     ok
   end
 
-  route 'COPY', '*' do
+  route 'COPY', '/*' do
     source = File.join options.public, params[:splat][0]
     dest = File.join options.public, URI.parse(request.env['HTTP_DESTINATION']).path
 
