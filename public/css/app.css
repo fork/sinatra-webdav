@@ -63,22 +63,18 @@ body {
 .breadcrumb li.first, .breadcrumb.active li {
 	display: list-item;
 }
-table {
-	border-collapse: collapse;
-	width: 100%;
-}
-.head {
-	overflow-y: scroll;
-}
 .data {
 	background-color: ghostwhite;
 	bottom: 0;
 	left: 0;
 	right: 0;
-	top: 44px;
+	top: 22px;
 	overflow: scroll;
-	padding-top: 1px;
 	position: absolute;
+}
+table {
+	border-collapse: collapse;
+	width: 100%;
 }
 th {
 	background-color: gainsboro;

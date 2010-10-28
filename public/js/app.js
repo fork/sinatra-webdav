@@ -6,33 +6,46 @@ jQuery(function($) {
 	// });
 
 	var $columns = $('#left, #right');
+	var LI = '<LI>', A_button = '<A CLASS="button">';
 
-    $columns.bind('webdav.directory', function(e, href, data) {
-		$('.data table', this).html(data);
+	function keygen(col, suffix) {
+		return 'webdav.' + $(col).attr('id') + '.' + suffix;
+	}
+	function app(key, value) {
+		if (arguments.length == 1) {
+			return app.hasOwnProperty(key) ? app[key] : $.cookie(key);
+		} else {
+			$.cookie(key, value);
+			return app[key] = value;
+		}
+	}
+	
+	function button(href, html) {
+		return $(A_button).attr('href', href).html(html);
+	}
+
+    $columns.bind('webdav.directory', function(e, _, data) {
+		$('.data tbody', this).html(data);
 	}).bind('webdav.directory', function(e, href) {
-		var $UL = $('.breadcrumb', this);
+		var $UL = $('.breadcrumb', this), key = keygen(this, 'href');
 		$UL.empty();
 
-		$.cookie($(this).attr('id'), href);
+		app(key, href);
 		var path     = href.substr(href.indexOf('/', 8)),
-		    dirnames = path.split('/'),
-		    pattern  = dirnames.pop().replace(/\*/, '');
+		    dirnames = path.split('/');
 
-		$('<LI><A CLASS="button" HREF="/*">/</A></LI>').prependTo($UL);
+		dirnames.pop();
 		dirnames.shift();
 
+		$(LI).append(button('/*', '/')).prependTo($UL);
 		$.each(dirnames, function(i) {
-			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/*',
-				html = this + '/',
-				$A = $('<A CLASS="button">').attr('href', path).html(html);
-
-			$('<LI>').append($A).prependTo($UL);
+			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/*';
+			$(LI).append(button(path, this.toString())).prependTo($UL);
 		});
-		$UL.children(':first-child').addClass('first');
 
-		$('INPUT[name="pattern"]', this).val(pattern);
+		$UL.children(':first-child').addClass('first');
     }).data('index', 0).each(function() {
-		var id = $(this).attr('id'), href = $.cookie(id);
+		var key = keygen(this, 'href'), href = app(key);
 		if (href == null) href = location.href + '*';
 		Controller('directory').apply(this, [href]);
 	}).click(function(e) {
@@ -59,6 +72,25 @@ jQuery(function($) {
 	$(document).click(function(e) {
 		var isActive = $.breadcrumb.is('.active');
 		if (isActive) $.breadcrumb.removeClass('active');
+	});
+
+	$('a[name="mkdir"]').click(function(e) {
+		e.preventDefault();
+
+		var dirname = prompt('This directory takes it, you name it:');
+		if (dirname == null) return;
+
+		var column = $columns.filter('.focus').get(0),
+			key    = keygen(column, 'href'),
+			href   = app(key).replace(/\*$/, '');
+
+		href += dirname;
+		WebDAV.MKCOL(href, function() {
+			Controller('directory').apply(column, [app(key)]);
+		});
+	});
+	$('a[name="logout"]').click(function(e) {
+		var dirname = confirm('Do you really want to quit?');
 	});
 
 	$columns.find('.data').click(function(e) {
