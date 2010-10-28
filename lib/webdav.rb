@@ -44,7 +44,7 @@ class WebDAV < ::Sinatra::Base
     path = File.join options.public, params[:splat][0]
 
     forbidden if path.include? STAR
-    conflict if not File.exists? File.dirname(path)
+    conflict unless File.exists? File.dirname(path)
     not_allowed if File.exists? path
     unsupported if request.body.size > 0
 
