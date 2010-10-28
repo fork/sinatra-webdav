@@ -90,6 +90,23 @@ jQuery(function($) {
 			Controller('directory').apply(column, [app(key)]);
 		});
 	});
+	$('a[name="delete"]').click(function(e) {
+		var column = $columns.filter('.focus').get(0),
+			key    = keygen(column, 'href'),
+			href   = app(key).replace(/\*$/, ''),
+			selected = $(column).find('tr.selected'),
+			name = selected.length > 1 ? selected.length + ' items' :
+			selected.first().find('td.name').text();
+		
+		if(!confirm('Do you really want to delete '+name+'?')) return;
+		
+		$.each(selected, function(i) {
+			url = href + $(this).find('td.name').text();
+			WebDAV.DELETE(url, function() {
+				Controller('directory').apply(column, [app(key)]);
+			});			
+		});
+	});
 	$('a[name="logout"]').click(function(e) {
 		var dirname = confirm('Do you really want to quit?');
 	});
