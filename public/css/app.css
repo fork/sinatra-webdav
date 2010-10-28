@@ -81,6 +81,7 @@ table {
 th {
 	background-color: gainsboro;
 	padding: 4px 8px;
+	cursor: pointer;
 }
 td {
 	padding: 2px 8px;

@@ -25,7 +25,8 @@ jQuery(function($) {
 	}
 
     $columns.bind('webdav.directory', function(e, _, data) {
-		$('.data tbody', this).html(data);
+		$('.data tbody', this).html(data)
+		.parent().sortableTable();
 	}).bind('webdav.directory', function(e, href) {
 		var $UL = $('.breadcrumb', this), key = keygen(this, 'href');
 		$UL.empty();

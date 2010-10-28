@@ -45,7 +45,7 @@ class WebDAV < ::Sinatra::Base
 
     forbidden if path.include? STAR
     conflict unless File.exists? File.dirname(path)
-    not_allowed if File.exists? path
+    not_allowed if File.exists? File.expand_path(path)
     unsupported if request.body.size > 0
 
     Dir.mkdir path
@@ -66,7 +66,7 @@ class WebDAV < ::Sinatra::Base
 
   put '/*' do
     path = File.join options.public, params[:splat][0]
-    not_found unless File.exists? File.dirname(path)
+    conflict unless File.exists? File.dirname(path)
 
     write request.body, path
 
