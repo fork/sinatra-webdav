@@ -49,8 +49,8 @@ jQuery(function($) {
 		if (href == null) href = location.href + '*';
 		Controller('directory').apply(this, [href]);
 	}).click(function(e) {
-		var $$ = $(this), hasFocus = $$.is('.focus');
-		if (!hasFocus) {
+		var $$ = $(this), isFocused = $$.is('.focus');
+		if (!isFocused) {
 			$columns.removeClass('focus');
 			$$.addClass('focus');
 		}

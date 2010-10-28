@@ -42,7 +42,7 @@ body {
 	border-left: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
 	bottom: 0;
-	top: 10px;
+	top: 5px;
 	padding-top: 22px;
 	position: absolute;
 }
@@ -58,6 +58,8 @@ body {
 	display: none;
 }
 .breadcrumb a {
+	font-size: 15px;
+	font-weight: bold;
 	display: block;
 }
 .breadcrumb li.first, .breadcrumb.active li {
@@ -68,7 +70,7 @@ body {
 	bottom: 0;
 	left: 0;
 	right: 0;
-	top: 22px;
+	top: 25px;
 	overflow: scroll;
 	position: absolute;
 }
@@ -123,7 +125,7 @@ tr:hover td {
 }
 #toolbar {
 	bottom: 12px;
-	left: 10px;
+	right: 10px;
 	position: absolute;
 }
 
