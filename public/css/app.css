@@ -20,6 +20,7 @@ body {
 	-moz-opacity: 1;
 	filter:alpha(opacity=100);
 }
+.hidden { display: none; }
 #left {
 	bottom: 30px;
 	left: 0;

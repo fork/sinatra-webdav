@@ -95,7 +95,8 @@ jQuery(function($) {
 			key    = keygen(column, 'href'),
 			href   = app(key).replace(/\*$/, ''),
 			selected = $(column).find('tr.selected'),
-			name = selected.length > 1 ? selected.length + ' items' :
+			ctr = selected.length,
+			name = ctr > 1 ? ctr + ' items' :
 			selected.first().find('td.name').text();
 		
 		if(!confirm('Do you really want to delete '+name+'?')) return;
@@ -103,7 +104,8 @@ jQuery(function($) {
 		$.each(selected, function(i) {
 			url = href + $(this).find('td.name').text();
 			WebDAV.DELETE(url, function() {
-				Controller('directory').apply(column, [app(key)]);
+				ctr -= 1;
+				if(ctr == 0) Controller('directory').apply(column,[app(key)]);
 			});			
 		});
 	});

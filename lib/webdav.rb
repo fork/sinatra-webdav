@@ -111,7 +111,7 @@ class WebDAV < ::Sinatra::Base
     stat  = File.stat path
     path  = path[root.length..-1]
     name  = File.basename path
-    mtime = stat.mtime.httpdate
+    mtime = stat.mtime
 
     unless stat.directory?
       size = stat.size
