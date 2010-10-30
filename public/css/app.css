@@ -6,6 +6,8 @@ body {
 	font-family: sans-serif;
 	font-size: 12px;
 	margin: 0;
+}
+#container {
 	min-width: 1280px;
 }
 .column {
@@ -69,10 +71,10 @@ body {
 	background-color: ghostwhite;
 	bottom: 0;
 	left: 0;
-	right: 0;
-	top: 25px;
 	overflow: scroll;
 	position: absolute;
+	right: 0;
+	top: 25px;
 }
 table {
 	border-collapse: collapse;
@@ -81,6 +83,7 @@ table {
 th {
 	background-color: gainsboro;
 	padding: 4px 8px;
+	white-space: nowrap;
 }
 td {
 	padding: 2px 8px;
