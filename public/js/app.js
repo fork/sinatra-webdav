@@ -25,7 +25,8 @@ jQuery(function($) {
 	}
 
     $columns.bind('webdav.directory', function(e, _, data) {
-		$('.data tbody', this).html(data);
+		$('.data tbody', this).html(data)
+		.parent().sortableTable();
 	}).bind('webdav.directory', function(e, href) {
 		var $UL = $('.breadcrumb', this), key = keygen(this, 'href');
 		$UL.empty();
@@ -87,6 +88,25 @@ jQuery(function($) {
 		href += dirname;
 		WebDAV.MKCOL(href, function() {
 			Controller('directory').apply(column, [app(key)]);
+		});
+	});
+	$('a[name="delete"]').click(function(e) {
+		var column = $columns.filter('.focus').get(0),
+			key    = keygen(column, 'href'),
+			href   = app(key).replace(/\*$/, ''),
+			selected = $(column).find('tr.selected'),
+			ctr = selected.length,
+			name = ctr > 1 ? ctr + ' items' :
+			selected.first().find('td.name').text();
+		
+		if(!confirm('Do you really want to delete '+name+'?')) return;
+		
+		$.each(selected, function(i) {
+			url = href + $(this).find('td.name').text();
+			WebDAV.DELETE(url, function() {
+				ctr -= 1;
+				if(ctr == 0) Controller('directory').apply(column,[app(key)]);
+			});			
 		});
 	});
 	$('a[name="logout"]').click(function(e) {

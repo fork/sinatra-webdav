@@ -13,6 +13,13 @@
 				type: 'MKCOL',
 				url: url
 			});
+		},
+		DELETE: function(url, callback) {
+			$.ajax({
+				success: callback,
+				type: 'DELETE',
+				url: url
+			});
 		}
 	}
 })(window, jQuery);

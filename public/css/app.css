@@ -22,6 +22,7 @@ body {
 	-moz-opacity: 1;
 	filter:alpha(opacity=100);
 }
+.hidden { display: none; }
 #left {
 	bottom: 30px;
 	left: 0;
@@ -84,6 +85,7 @@ th {
 	background-color: gainsboro;
 	padding: 4px 8px;
 	white-space: nowrap;
+	cursor: pointer;
 }
 td {
 	padding: 2px 8px;

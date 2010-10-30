@@ -44,8 +44,8 @@ class WebDAV < ::Sinatra::Base
     path = File.join options.public, params[:splat][0]
 
     forbidden if path.include? STAR
-    conflict if not File.exists? File.dirname(path)
-    not_allowed if File.exists? path
+    conflict unless File.exists? File.dirname(path)
+    not_allowed if File.exists? File.expand_path(path)
     unsupported if request.body.size > 0
 
     Dir.mkdir path
@@ -53,7 +53,7 @@ class WebDAV < ::Sinatra::Base
     ok
   end
 
-  route 'COPY', '*' do
+  route 'COPY', '/*' do
     source = File.join options.public, params[:splat][0]
     dest = File.join options.public, URI.parse(request.env['HTTP_DESTINATION']).path
 
@@ -66,7 +66,7 @@ class WebDAV < ::Sinatra::Base
 
   put '/*' do
     path = File.join options.public, params[:splat][0]
-    not_found unless File.exists? File.dirname(path)
+    conflict unless File.exists? File.dirname(path)
 
     write request.body, path
 
@@ -111,7 +111,7 @@ class WebDAV < ::Sinatra::Base
     stat  = File.stat path
     path  = path[root.length..-1]
     name  = File.basename path
-    mtime = stat.mtime.httpdate
+    mtime = stat.mtime
 
     unless stat.directory?
       size = stat.size
