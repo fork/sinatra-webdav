@@ -1,13 +1,17 @@
 jQuery(function($) {
 	// var db = openDatabase('WebDAV Client', '1.0', 'WebDAV Client', 1024^2)
-	// 
+	//
 	// db.transaction(function(tx) {
 	// 	tx.executeSql('CREATE TABLE IF NOT EXISTS bookmarks(id, name, url)');
 	// });
 
 	var $columns = $('#left, #right');
-	var LI = '<LI>', A_button = '<A CLASS="button">';
+	var LI          = '<LI>',
+		A_button    = '<A CLASS="button">';
 
+	function hidden(html) {
+		return $('<SPAN CLASS="hidden">').html(html);
+	}
 	function keygen(col, suffix) {
 		return 'webdav.' + $(col).attr('id') + '.' + suffix;
 	}
@@ -19,14 +23,29 @@ jQuery(function($) {
 			return app[key] = value;
 		}
 	}
-	
+
 	function button(href, html) {
 		return $(A_button).attr('href', href).html(html);
 	}
 
+	$columns.find('.data table').sorrow();
     $columns.bind('webdav.directory', function(e, _, data) {
-		$('.data tbody', this).html(data)
-		.parent().sortableTable();
+		data.find('.type').each(function() {
+			if (this.innerText == 'directory') {
+				var SPAN = hidden('-1 ');
+				$(this).siblings('.size').prepend(SPAN);
+			}
+		});
+		data.find('.mtime').each(function() {
+			var uts = new Date(this.innerText).valueOf(),
+				SPAN = hidden(uts + ' ');
+
+			$(this).prepend(SPAN);
+		});
+
+		rows = data.children('tr');
+		$('.data table', this).sorrow('overwrite', { rows: rows });
+		$('.data table', this).sorrow('sort');
 	}).bind('webdav.directory', function(e, href) {
 		var $UL = $('.breadcrumb', this), key = keygen(this, 'href');
 		$UL.empty();
@@ -91,26 +110,27 @@ jQuery(function($) {
 		});
 	});
 	$('a[name="delete"]').click(function(e) {
-		var column = $columns.filter('.focus').get(0),
-			key    = keygen(column, 'href'),
-			href   = app(key).replace(/\*$/, ''),
-			selected = $(column).find('tr.selected'),
-			ctr = selected.length,
-			name = ctr > 1 ? ctr + ' items' :
-			selected.first().find('td.name').text();
-		
-		if(!confirm('Do you really want to delete '+name+'?')) return;
-		
+		var $column  = $columns.filter('.focus'),
+			key      = keygen(column, 'href'),
+			href     = app(key).replace(/\*$/, ''),
+			selected = $column.find('tr.selected'),
+			question = 'Do you really want to delete ';
+
+		if (selected.length > 1)
+			question += 'selected resources';
+		else
+			question += selected.find('td.name').text();
+
+		var sure = confirm( + name + '?');
+		if(!sure) return;
+
 		$.each(selected, function(i) {
-			url = href + $(this).find('td.name').text();
-			WebDAV.DELETE(url, function() {
-				ctr -= 1;
-				if(ctr == 0) Controller('directory').apply(column,[app(key)]);
-			});			
+			var $TR = $(this), url = href + $TR.find('.name').text();
+			WebDAV.DELETE(url, function() { $TR.remove(); });
 		});
 	});
-	$('a[name="logout"]').click(function(e) {
-		var dirname = confirm('Do you really want to quit?');
+	$('a[name="exit"]').click(function(e) {
+		confirm('Do you really want to quit?');
 	});
 
 	$columns.find('.data').click(function(e) {
@@ -118,7 +138,7 @@ jQuery(function($) {
 
 		$TR = $('TR', this).removeClass('selected').has(e.target);
 		$TR.addClass('selected');
-		
+
 		var isAnchor = $(e.target).is('A');
 		if (isAnchor) {
 			var A    = e.target,

@@ -11,6 +11,4 @@ table
           a.path href="#{ path }" = name
         td.size = size
         td.type = type
-        td.mtime
-          span.hidden = mtime.to_i
-          = mtime.httpdate
+        td.mtime = mtime.httpdate
