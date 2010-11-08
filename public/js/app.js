@@ -111,7 +111,7 @@ jQuery(function($) {
 	});
 	$('a[name="delete"]').click(function(e) {
 		var $column  = $columns.filter('.focus'),
-			key      = keygen(column, 'href'),
+			key      = keygen($column, 'href'),
 			href     = app(key).replace(/\*$/, ''),
 			selected = $column.find('tr.selected'),
 			question = 'Do you really want to delete ';
@@ -121,7 +121,7 @@ jQuery(function($) {
 		else
 			question += selected.find('td.name').text();
 
-		var sure = confirm( + name + '?');
+		var sure = confirm( question + '?');
 		if(!sure) return;
 
 		$.each(selected, function(i) {
@@ -130,7 +130,7 @@ jQuery(function($) {
 		});
 	});
 	$('a[name="exit"]').click(function(e) {
-		confirm('Do you really want to quit?');
+		if(confirm('Do you really want to quit?')) window.location = '/logout';
 	});
 
 	$columns.find('.data').click(function(e) {

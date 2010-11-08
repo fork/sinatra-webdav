@@ -9,6 +9,35 @@ class WebDAV < ::Sinatra::Base
   disable :dump_errors
   enable :raise_errors
 
+  enable :sessions
+
+  helpers do
+    def protected!
+      # TODO is return_to uri needed?
+      unauthorized unless authorized?
+    end
+    def authorized?
+      session[:user]
+    end
+  end
+
+  use OmniAuth::Builder do
+    provider OmniAuth::Strategies::CAS, { :cas_server => 'https://cas.fork.de',
+      :cas_service_validate_url => 'https://cas.fork.de/proxyValidate' }
+  end
+
+  get '/logout' do
+    session[:user] = nil
+    'logged out!'
+  end
+
+  get '/auth/:provider/callback' do
+    auth = request.env['omniauth.auth']
+    session[:user] = auth
+    # TODO is return_to uri needed?
+    redirect '/'
+  end
+
   # We do not want to generate string all the time.
   SLASH = '/'
   SPACE = ' '
@@ -41,6 +70,7 @@ class WebDAV < ::Sinatra::Base
   # end
 
   route 'MKCOL', '/*' do
+    protected!
     path = File.join options.public, params[:splat][0]
 
     forbidden if path.include? STAR
@@ -54,6 +84,7 @@ class WebDAV < ::Sinatra::Base
   end
 
   route 'COPY', '/*' do
+    protected!
     source = File.join options.public, params[:splat][0]
     dest = File.join options.public, URI.parse(request.env['HTTP_DESTINATION']).path
 
@@ -65,6 +96,7 @@ class WebDAV < ::Sinatra::Base
   end
 
   put '/*' do
+    protected!
     path = File.join options.public, params[:splat][0]
     conflict unless File.exists? File.dirname(path)
 
@@ -74,6 +106,7 @@ class WebDAV < ::Sinatra::Base
   end
 
   delete '/*' do
+    protected!
     path = File.join options.public, params[:splat][0]
 
     not_found unless File.exists? path
@@ -83,6 +116,7 @@ class WebDAV < ::Sinatra::Base
   end
 
   get '/*' do
+    protected!
     root = options.public
     glob = make_glob params[:splat].first, root
 
@@ -131,6 +165,9 @@ class WebDAV < ::Sinatra::Base
   end
   def created
     halt 201
+  end
+  def unauthorized
+    error 401
   end
   def forbidden
     error 403
