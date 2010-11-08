@@ -17,7 +17,7 @@ class WebDAV < ::Sinatra::Base
       unauthorized unless authorized?
     end
     def authorized?
-      session[:user]
+      not session[:user].nil?
     end
   end
 
@@ -34,6 +34,9 @@ class WebDAV < ::Sinatra::Base
   get '/auth/:provider/callback' do
     auth = request.env['omniauth.auth']
     session[:user] = auth
+
+    group_name = auth['extra']['group_name'].strip
+    settings.set :public, File.join(settings.root, CUSTOM_PUBLIC, group_name)
     # TODO is return_to uri needed?
     redirect '/'
   end
@@ -44,6 +47,9 @@ class WebDAV < ::Sinatra::Base
   STAR  = '*'
   STARS = '**'
   DASH  = '-'
+
+  # name for custom public folder containing user group folders
+  CUSTOM_PUBLIC = 'group_files'
 
   # Static type for directories.
   DIRECTORY_TYPE = 'directory'
