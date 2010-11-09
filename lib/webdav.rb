@@ -6,7 +6,7 @@ require "#{ File.dirname __FILE__ }/sinatra/templates/slim"
 # see http://www.webdav.org/specs/rfc4918.html
 class WebDAV < ::Sinatra::Base
   set :root, File.expand_path('../..', __FILE__)
-  disable :dump_errors
+  disable :dump_errors, :static
   enable :raise_errors
 
   enable :sessions
@@ -14,6 +14,9 @@ class WebDAV < ::Sinatra::Base
   helpers do
     def protected!
       # TODO is return_to uri needed?
+      
+      # USE TO TEST WITH LITMUS (and comment out authorized stuff)
+      #settings.set :public, File.join(settings.root, CUSTOM_PUBLIC)
       unauthorized unless authorized?
     end
     def authorized?
@@ -21,6 +24,7 @@ class WebDAV < ::Sinatra::Base
     end
   end
 
+  # testuser 'admin' 'whatever' / folder group_files/admins needed in root
   use OmniAuth::Builder do
     provider OmniAuth::Strategies::CAS, { :cas_server => 'https://cas.fork.de',
       :cas_service_validate_url => 'https://cas.fork.de/proxyValidate' }
@@ -60,7 +64,8 @@ class WebDAV < ::Sinatra::Base
   # Add methods in the 'Allow' header when we support them.
   #
   # see http://www.webdav.org/specs/rfc4918.html#rfc.section.18
-  OPTIONS_HEADER = { 'DAV' => '1', 'Allow' => 'OPTIONS, HEAD, GET, MKCOL, PUT, DELETE, COPY' }
+  OPTIONS_HEADER = { 'DAV' => '1', 
+    'Allow' => 'OPTIONS, HEAD, GET, MKCOL, PUT, DELETE, COPY, MOVE, PROPFIND' }
 
   route 'OPTIONS', '/*' do
     headers OPTIONS_HEADER
@@ -89,15 +94,41 @@ class WebDAV < ::Sinatra::Base
     ok
   end
 
+  route 'MOVE', '/*' do
+    protected!
+    source = File.join options.public, params[:splat][0]
+    dest = File.join options.public, URI.parse(request.env['HTTP_DESTINATION']).path
+    exists = File.exist? dest
+    overwrite = request.env['HTTP_OVERWRITE'] == 'T'
+    
+    precondition_failed if not overwrite and exists
+    not_allowed if not overwrite and exists and !File.directory?(dest)
+
+    FileUtils.mv source, dest, :force => true
+
+    exists ? no_content : created
+  end
+
   route 'COPY', '/*' do
     protected!
     source = File.join options.public, params[:splat][0]
     dest = File.join options.public, URI.parse(request.env['HTTP_DESTINATION']).path
+    exists = File.exist? dest
 
-    Dir.mkdir dest if File.directory?(source) and not File.exist?(dest)
+    precondition_failed if request.env['HTTP_OVERWRITE'] == 'F' and exists
+    conflict unless File.exist?(File.dirname(dest))
 
     FileUtils.cp_r source, dest
     
+    exists ? no_content : created
+  end
+
+  route 'PROPFIND', '/*' do
+    xml = Nokogiri::XML request.body.read
+    
+    bad_request unless xml.errors.empty?
+
+    #TODO xml response...
     ok
   end
 
@@ -128,6 +159,7 @@ class WebDAV < ::Sinatra::Base
 
     forbidden if glob.include? STARS
     not_found unless glob.include? STAR or File.exists? glob
+    return File.read(glob) if not glob.include? STAR and File.file? glob
 
     list = Dir[glob].map! { |path| file_values path, root }
     path = glob[root.length..-1]
@@ -172,6 +204,12 @@ class WebDAV < ::Sinatra::Base
   def created
     halt 201
   end
+  def no_content
+    halt 204
+  end
+  def bad_request
+    error 400
+  end
   def unauthorized
     error 401
   end
@@ -183,6 +221,9 @@ class WebDAV < ::Sinatra::Base
   end
   def conflict
     error 409
+  end
+  def precondition_failed
+    error 412
   end
   def unsupported
     error 415
