@@ -150,4 +150,15 @@ jQuery(function($) {
 			Controller(type).apply(this, [A.href]);
 		}
 	});
+
+	// TODO: Swap configuration to application configuration file
+	$('.uploader').pluploadQueue({
+		runtimes : 'html5',
+		url : '/',
+		max_file_size : '100mb',
+		chunk_size : '1mb',
+		unique_names : true,
+		dragdrop : true
+	});
+
 });
