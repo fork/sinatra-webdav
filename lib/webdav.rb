@@ -134,12 +134,14 @@ class WebDAV < ::Sinatra::Base
 
   put '/*' do
     protected!
-    path = File.join options.public, params[:splat][0]
-    conflict unless File.exists? File.dirname(path)
-
-    write request.body, path
-
-    created
+    putter = ::Put.new(params, options)
+    if res = putter.process and res.first
+      halt 201, no_cache_header, res.last
+    elsif !res.first
+      error 409 do
+        res.last
+      end
+    end
   end
 
   delete '/*' do
@@ -241,6 +243,14 @@ class WebDAV < ::Sinatra::Base
     File.rename(tempfile, path)
   ensure
     File.unlink(tempfile) rescue nil
+  end
+
+  def no_cache_header
+    { 'Content-type' => 'text/plain; charset=UTF-8',
+      'Expires' => 'Mon, 26 Jul 1997 05:00:00 GMT',
+      'Last-Modified' => Time.now.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
+      'Cache-Control' => 'no-store, no-cache, must-revalidate',
+      'Pragma' => 'no-cache' }
   end
 
 end
