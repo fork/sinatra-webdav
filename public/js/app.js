@@ -161,4 +161,15 @@ jQuery(function($) {
 		dragdrop : true
 	});
 
+	$('.plupload_filelist_toggle .icon').bind('mouseenter click', function() {
+		$(this).parent().hide();
+	  $(this).parent().siblings(".plupload_wrapper").show();
+	});
+	$('.plupload_filelist_header .icon').bind('mouseenter click', function() {
+		$(this).parents('.plupload_wrapper').hide();
+	  $(this).parents('.plupload_wrapper').siblings('.plupload_filelist_toggle').show();
+	});
+	$('.plupload_wrapper').hide();
+	$('.plupload_filelist_toggle').show();
+
 });
