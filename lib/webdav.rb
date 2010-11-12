@@ -1,5 +1,7 @@
 Bundler.require
 require "#{ File.dirname __FILE__ }/sinatra/templates/slim"
+require "#{ File.dirname __FILE__ }/dav/resource"
+
 
 # Sinatra based WebDAV implementation
 #
@@ -16,8 +18,8 @@ class WebDAV < ::Sinatra::Base
       # TODO is return_to uri needed?
       
       # USE TO TEST WITH LITMUS (and comment out authorized stuff)
-      #settings.set :public, File.join(settings.root, CUSTOM_PUBLIC)
-      unauthorized unless authorized?
+      settings.set :public, File.join(settings.root, CUSTOM_PUBLIC)
+      #unauthorized unless authorized?
     end
     def authorized?
       not session[:user].nil?
@@ -124,12 +126,40 @@ class WebDAV < ::Sinatra::Base
   end
 
   route 'PROPFIND', '/*' do
+    path = Pathname File.join(options.public, params[:splat][0])
     xml = Nokogiri::XML request.body.read
     
     bad_request unless xml.errors.empty?
+    not_found unless path.exist?
+    
+    resource = Dav::Resource.new path, request
 
-    #TODO xml response...
-    ok
+    if xml.at_css("propfind allprop")
+      names = resource.property_names
+    else
+      names = xml.at_css("propfind prop").children.map {|e|
+        e.node_name unless e.node_name == 'text'}.compact
+      names = resource.property_names if names.empty?
+      bad_request if names.empty?
+    end
+
+    host = "#{request.scheme}://#{request.host}/"
+
+    builder = Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
+      xml.multistatus('xmlns' => "DAV:") do
+        for r in resource.find_resources
+          xml.response do
+            xml.href "#{host}#{r.path.relative_path_from(Pathname(options.public))}"
+            propstats xml, r.get_properties(names)
+          end
+        end
+      end
+    end
+
+    content_type 'application/xml'
+
+    body builder.to_xml
+    multi_status
   end
 
   put '/*' do
@@ -198,6 +228,43 @@ class WebDAV < ::Sinatra::Base
     return path, name, size, type, mtime
   end
 
+  def propstats(xml, stats)
+    return if stats.empty?
+    for status, props in stats
+      xml.propstat do
+        xml.prop do
+          for name, value in props
+            if value.is_a?(Nokogiri::XML::DocumentFragment)
+              xml.send(name) do
+                nokogiri_convert(xml, value.children.first)
+              end
+            else
+              xml.send name, value
+            end
+          end
+        end
+        xml.status "HTTP/1.1 #{status.status_line}"
+      end
+    end
+  end
+
+  def nokogiri_convert(xml, element)
+    # FIXME set attributes correctly
+    if element.children.empty?
+      if element.text?
+        xml.send element.name, element.text, element.attributes
+      else
+        xml.send element.name, element.attributes
+      end
+    else
+      xml.send(element.name, element.attributes) do
+        element.children.each do |child|
+          nokogiri_convert(xml, child)
+        end
+      end
+    end
+  end
+
   def ok
     halt 200
   end
@@ -206,6 +273,9 @@ class WebDAV < ::Sinatra::Base
   end
   def no_content
     halt 204
+  end
+  def multi_status
+    halt 207
   end
   def bad_request
     error 400
