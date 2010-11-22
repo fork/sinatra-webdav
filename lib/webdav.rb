@@ -1,6 +1,7 @@
 Bundler.require
 require "#{ File.dirname __FILE__ }/sinatra/templates/slim"
 require "#{ File.dirname __FILE__ }/dav/resource"
+require "#{ File.dirname __FILE__ }/uploader"
 
 
 # Sinatra based WebDAV implementation
@@ -67,7 +68,7 @@ class WebDAV < ::Sinatra::Base
   #
   # see http://www.webdav.org/specs/rfc4918.html#rfc.section.18
   OPTIONS_HEADER = { 'DAV' => '1', 
-    'Allow' => 'OPTIONS, HEAD, GET, MKCOL, PUT, DELETE, COPY, MOVE, PROPFIND' }
+    'Allow' => 'OPTIONS, HEAD, GET, MKCOL, PUT, DELETE, COPY, MOVE, PROPFIND, PROPPATCH' }
 
   route 'OPTIONS', '/*' do
     headers OPTIONS_HEADER
@@ -132,13 +133,13 @@ class WebDAV < ::Sinatra::Base
     bad_request unless xml.errors.empty?
     not_found unless path.exist?
     
-    resource = Dav::Resource.new path, request
+    resource = Dav::Resource.new path, request, options
 
     if xml.at_css("propfind allprop")
       names = resource.property_names
     else
       names = xml.at_css("propfind prop").children.map {|e|
-        e.node_name unless e.node_name == 'text'}.compact
+        e unless e.node_name == 'text'}.compact
       names = resource.property_names if names.empty?
       bad_request if names.empty?
     end
@@ -162,7 +163,70 @@ class WebDAV < ::Sinatra::Base
     multi_status
   end
 
+  route 'PROPPATCH', '/*' do
+    path = Pathname File.join(options.public, params[:splat][0])
+    xml = Nokogiri::XML request.body.read
+    
+    bad_request unless xml.errors.empty?
+    not_found unless path.exist?
+    
+    resource = Dav::Resource.new path, request, options
+
+    ns = xml.namespaces
+    ns.delete 'xmlns'
+
+    selector = if ns.empty?
+      'propertyupdate set prop'
+    else
+      sel = ns.keys.first.split(':').last
+      "#{sel}|propertyupdate #{sel}|set #{sel}|prop"
+    end
+
+    rem_selector = if ns.empty?
+      'propertyupdate remove prop'
+    else
+      sel = ns.keys.first.split(':').last
+      "#{sel}|propertyupdate #{sel}|remove #{sel}|prop"
+    end
+
+    prop_set = xml.css(selector).children.map {|e|
+      e unless e.node_name == 'text'}.compact
+    
+    prop_rem = xml.css(rem_selector).children.map {|e|
+      e unless e.node_name == 'text'}.compact
+
+    host = "#{request.scheme}://#{request.host}/"
+
+    builder = Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
+      xml.multistatus('xmlns' => "DAV:") do
+        for r in resource.find_resources
+          xml.response do
+            xml.href "#{host}#{r.path.relative_path_from(Pathname(options.public))}"
+            propstats xml, r.set_properties(prop_set)
+            propstats xml, r.remove_properties(prop_rem)
+          end
+        end
+      end
+    end
+
+    content_type 'application/xml'
+
+    body builder.to_xml
+    multi_status
+  end
+
   put '/*' do
+    protected!
+    path = File.join options.public, params[:splat][0]
+    conflict unless File.exists? File.dirname(path)
+  
+    write request.body, path
+  
+    created
+  end
+
+  # set upload to post as litmus webdav test fails on put here
+  post '/*' do
     protected!
     putter = ::Put.new(params, options)
     if res = putter.process and res.first
@@ -232,14 +296,16 @@ class WebDAV < ::Sinatra::Base
 
   def propstats(xml, stats)
     return if stats.empty?
+
     for status, props in stats
       xml.propstat do
         xml.prop do
           for name, value in props
             if value.is_a?(Nokogiri::XML::DocumentFragment)
-              xml.send(name) do
-                nokogiri_convert(xml, value.children.first)
-              end
+              xml << value.children.first.to_xml
+              #xml.send(name) do
+              #  nokogiri_convert(xml, value.children.first)
+              #end
             else
               xml.send name, value
             end
@@ -250,11 +316,12 @@ class WebDAV < ::Sinatra::Base
     end
   end
 
+  # not needed... maybe
   def nokogiri_convert(xml, element)
-    # FIXME set attributes correctly
     if element.children.empty?
       if element.text?
-        xml.send element.name, element.text, element.attributes
+        element.content
+        #xml.send element.name, element.content, element.attributes
       else
         xml.send element.name, element.attributes
       end
