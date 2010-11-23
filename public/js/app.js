@@ -109,6 +109,72 @@ jQuery(function($) {
 			Controller('directory').apply(column, [app(key)]);
 		});
 	});
+	$('a[name="copy"]').click(function(e) {
+		e.preventDefault();
+
+		var column = $columns.filter('.focus'),
+			other_column = $columns.not('.focus'),
+			source = column.find('tr.selected'),
+			target = other_column.find('tr.selected'),
+		 	key    = keygen(column, 'href'),
+		 	href   = app(key).replace(/\*$/, ''),
+			source_path = href + source.find('td.name').text(),
+			host = window.location.protocol + '//' + window.location.host,
+			target_path;
+
+		if (target.length > 0) {
+			target_path = href + target.find('td.name').text();
+		} else {
+			target_path = host + other_column.find('li.first a')
+				.attr('href').replace(/\*$/, '');
+		}
+		
+		var src_name = source_path.replace(host, ''),
+			dest_name = target_path.replace(host, ''),
+			sure = confirm('Copy "'+ src_name +'" to "'+ dest_name +'" ?');
+
+		if (!sure) return;
+		
+		WebDAV.COPY(source_path, target_path, function() {
+			Controller('directory').apply(column, [app(key)]);
+			// TODO: refresh to target dir...
+			Controller('directory').apply(other_column, [app(key)]);
+		});
+	});
+	$('a[name="move"]').click(function(e) {
+		e.preventDefault();
+
+		var column = $columns.filter('.focus'),
+			other_column = $columns.not('.focus'),
+			source = column.find('tr.selected'),
+			target = other_column.find('tr.selected'),
+		 	key    = keygen(column, 'href'),
+		 	href   = app(key).replace(/\*$/, ''),
+			source_path = href + source.find('td.name').text(),
+			host = window.location.protocol + '//' + window.location.host,
+			target_path;
+
+		if (target.length > 0) {
+			target_path = href + target.find('td.name').text();
+		} else {
+			target_path = host + other_column.find('li.first a')
+				.attr('href').replace(/\*$/, '');
+		}
+		
+		var src_name = source_path.replace(host, ''),
+			dest_name = target_path.replace(host, ''),
+			dirname = prompt('Move "' + src_name + '" to "' + dest_name +
+			'" ? Or enter name to rename:');
+
+		if (dirname == null) return;
+		if (dirname.length > 0) target_path = href + dirname;
+		
+		WebDAV.MOVE(source_path, target_path, function() {
+			Controller('directory').apply(column, [app(key)]);
+			// TODO: refresh to target dir...
+			Controller('directory').apply(other_column, [app(key)]);
+		});
+	});
 	$('a[name="delete"]').click(function(e) {
 		var $column  = $columns.filter('.focus'),
 			key      = keygen($column, 'href'),
