@@ -127,6 +127,7 @@ class WebDAV < ::Sinatra::Base
   end
 
   route 'PROPFIND', '/*' do
+    protected!
     path = Pathname File.join(options.public, params[:splat][0])
     xml = Nokogiri::XML request.body.read
     
@@ -164,6 +165,7 @@ class WebDAV < ::Sinatra::Base
   end
 
   route 'PROPPATCH', '/*' do
+    protected!
     path = Pathname File.join(options.public, params[:splat][0])
     xml = Nokogiri::XML request.body.read
     
