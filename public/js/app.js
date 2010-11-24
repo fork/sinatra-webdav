@@ -23,6 +23,11 @@ jQuery(function($) {
 			return app[key] = value;
 		}
 	}
+	function getHost() {
+		loc = window.location;
+		port = loc.port == '' ? '' : ':' + loc.port;
+		return loc.protocol + '//' + loc.host +	port;
+	}
 
 	function button(href, html) {
 		return $(A_button).attr('href', href).html(html);
@@ -119,7 +124,7 @@ jQuery(function($) {
 		 	key    = keygen(column, 'href'),
 		 	href   = app(key).replace(/\*$/, ''),
 			source_path = href + source.find('td.name').text(),
-			host = window.location.protocol + '//' + window.location.host,
+			host = getHost(),
 			target_path;
 
 		if (target.length > 0) {
@@ -151,7 +156,7 @@ jQuery(function($) {
 		 	key    = keygen(column, 'href'),
 		 	href   = app(key).replace(/\*$/, ''),
 			source_path = href + source.find('td.name').text(),
-			host = window.location.protocol + '//' + window.location.host,
+			host = getHost(),
 			target_path;
 
 		if (target.length > 0) {
