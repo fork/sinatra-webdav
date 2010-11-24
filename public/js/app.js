@@ -152,15 +152,17 @@ jQuery(function($) {
 		var column = $columns.filter('.focus'),
 			other_column = $columns.not('.focus'),
 			source = column.find('tr.selected'),
+			source_name = source.find('td.name').text(),
 			target = other_column.find('tr.selected'),
+			target_name = target.find('td.name').text(),
 		 	key    = keygen(column, 'href'),
 		 	href   = app(key).replace(/\*$/, ''),
-			source_path = href + source.find('td.name').text(),
+			source_path = href + source_name,
 			host = getHost(),
-			target_path;
+			target_path, onlyRename = false;
 
 		if (target.length > 0) {
-			target_path = href + target.find('td.name').text();
+			target_path = href + target_name;
 		} else {
 			target_path = host + other_column.find('li.first a')
 				.attr('href').replace(/\*$/, '');
@@ -169,15 +171,19 @@ jQuery(function($) {
 		var src_name = source_path.replace(host, ''),
 			dest_name = target_path.replace(host, ''),
 			dirname = prompt('Move "' + src_name + '" to "' + dest_name +
-			'" ? Or enter name to rename:');
+			'" ?\n Or enter different name to rename:', source_name);
 
 		if (dirname == null) return;
-		if (dirname.length > 0) target_path = href + dirname;
+		if (dirname != source_name) {
+			onlyRename = true;
+			target_path = href + dirname;
+		}
 		
 		WebDAV.MOVE(source_path, target_path, function() {
 			Controller('directory').apply(column, [app(key)]);
 			// TODO: refresh to target dir...
-			Controller('directory').apply(other_column, [app(key)]);
+			if (!onlyRename)
+				Controller('directory').apply(other_column, [app(key)]);
 		});
 	});
 	$('a[name="delete"]').click(function(e) {
