@@ -142,8 +142,7 @@ jQuery(function($) {
 		
 		WebDAV.COPY(source_path, target_path, function() {
 			Controller('directory').apply(column, [app(key)]);
-			// TODO: refresh to target dir...
-			Controller('directory').apply(other_column, [app(key)]);
+			Controller('directory').apply(other_column, [target_path + '*']);
 		});
 	});
 	$('a[name="move"]').click(function(e) {
@@ -183,7 +182,7 @@ jQuery(function($) {
 			Controller('directory').apply(column, [app(key)]);
 			// TODO: refresh to target dir...
 			if (!onlyRename)
-				Controller('directory').apply(other_column, [app(key)]);
+				Controller('directory').apply(other_column, [target_path + '*']);
 		});
 	});
 	$('a[name="delete"]').click(function(e) {
