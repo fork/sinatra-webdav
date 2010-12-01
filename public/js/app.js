@@ -106,12 +106,17 @@ jQuery(function($) {
 		if (dirname == null) return;
 
 		var column = $columns.filter('.focus').get(0),
+			other_column = $columns.not('.focus'),
 			key    = keygen(column, 'href'),
-			href   = app(key).replace(/\*$/, '');
+			href   = app(key).replace(/\*$/, ''),
+			other_key    = keygen(other_column, 'href'),
+			other_href   = app(other_key).replace(/\*$/, '');
 
-		href += dirname;
-		WebDAV.MKCOL(href, function() {
+		dirname = href + dirname;
+		WebDAV.MKCOL(dirname, function() {
 			Controller('directory').apply(column, [app(key)]);
+			if (href == other_href)
+				Controller('directory').apply(other_column, [app(key)]);
 		});
 	});
 	$('a[name="copy"]').click(function(e) {
@@ -210,8 +215,11 @@ jQuery(function($) {
 	});
 	$('a[name="delete"]').click(function(e) {
 		var $column  = $columns.filter('.focus'),
+			other_column = $columns.not('.focus'),
 			key      = keygen($column, 'href'),
 			href     = app(key).replace(/\*$/, ''),
+			other_key      = keygen(other_column, 'href'),
+			other_href     = app(other_key).replace(/\*$/, ''),
 			selected = $column.find('tr.selected'),
 			question = 'Do you really want to delete ';
 
@@ -224,8 +232,18 @@ jQuery(function($) {
 		if(!sure) return;
 
 		$.each(selected, function(i) {
-			var $TR = $(this), url = href + $TR.find('.name').text();
-			WebDAV.DELETE(url, function() { $TR.remove(); });
+			var $TR = $(this), name = $TR.find('.name').text(),
+				$OTHER_TR = other_column.find('td.name').filter(function() {
+					return $(this).text() == name;
+				}),
+				url = href + name;
+				if($OTHER_TR)
+					console.log($OTHER_TR.length);
+			WebDAV.DELETE(url, function() { 
+				$TR.remove();
+				if(href == other_href && $OTHER_TR.length != 0)
+					$OTHER_TR.parent().remove();
+			});
 		});
 	});
 	$('a[name="exit"]').click(function(e) {
