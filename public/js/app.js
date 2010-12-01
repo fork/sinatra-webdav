@@ -119,30 +119,39 @@ jQuery(function($) {
 
 		var column = $columns.filter('.focus'),
 			other_column = $columns.not('.focus'),
-			source = column.find('tr.selected'),
+			selected = column.find('tr.selected'),
 			target = other_column.find('tr.selected'),
 		 	key    = keygen(column, 'href'),
 		 	href   = app(key).replace(/\*$/, ''),
-			source_path = href + source.find('td.name').text(),
 			host = getHost(),
-			target_path;
+			question = 'Do you really want to copy ',
+			target_path, target_name, glob;
 
 		if (target.length > 0) {
-			target_path = href + target.find('td.name').text();
+			glob = '/*';
+			target_name = target.find('td.name').first().text();
+			target_path = href + target_name;
 		} else {
+			glob = '*'
+			target_name = other_column.find('li.first a').text();
 			target_path = host + other_column.find('li.first a')
 				.attr('href').replace(/\*$/, '');
 		}
-		
-		var src_name = source_path.replace(host, ''),
-			dest_name = target_path.replace(host, ''),
-			sure = confirm('Copy "'+ src_name +'" to "'+ dest_name +'" ?');
 
-		if (!sure) return;
-		
-		WebDAV.COPY(source_path, target_path, function() {
-			Controller('directory').apply(column, [app(key)]);
-			Controller('directory').apply(other_column, [target_path + '*']);
+		if (selected.length > 1)
+			question += 'selected resources';
+		else
+			question += selected.find('td.name').text();
+
+		var sure = confirm( question + ' to ' + target_name + ' ?');
+		if(!sure) return;
+
+		$.each(selected, function(i) {
+			var $TR = $(this), url = href + $TR.find('.name').text();
+			WebDAV.COPY(url, target_path, function() {
+				if (i + 1 == selected.length)
+					Controller('directory').apply(other_column, [target_path + glob]);
+			});
 		});
 	});
 	$('a[name="move"]').click(function(e) {
@@ -150,39 +159,53 @@ jQuery(function($) {
 
 		var column = $columns.filter('.focus'),
 			other_column = $columns.not('.focus'),
-			source = column.find('tr.selected'),
-			source_name = source.find('td.name').text(),
+			selected = column.find('tr.selected'),
 			target = other_column.find('tr.selected'),
-			target_name = target.find('td.name').text(),
+			target_name = target.find('td.name').first().text(),
 		 	key    = keygen(column, 'href'),
 		 	href   = app(key).replace(/\*$/, ''),
-			source_path = href + source_name,
 			host = getHost(),
-			target_path, onlyRename = false;
+			question = 'Do you really want to move ',
+			target_path, target_name, glob, onlyRename = false;
 
 		if (target.length > 0) {
+			target_name = target.find('td.name').first().text();
 			target_path = href + target_name;
+			glob = target_path + '/*';
 		} else {
+			
+			target_name = other_column.find('li.first a').text();
 			target_path = host + other_column.find('li.first a')
 				.attr('href').replace(/\*$/, '');
+			glob = target_path + '*'
 		}
-		
-		var src_name = source_path.replace(host, ''),
-			dest_name = target_path.replace(host, ''),
-			dirname = prompt('Move "' + src_name + '" to "' + dest_name +
-			'" ?\n Or enter different name to rename:', source_name);
 
-		if (dirname == null) return;
-		if (dirname != source_name) {
-			onlyRename = true;
-			target_path = href + dirname;
+		var rename;
+		if (selected.length > 1) {
+			question += 'selected resources';
+			rename = confirm( question + ' to ' + target_name + ' ?');
+		} else {
+			var source_name = selected.find('td.name').text();
+			question += source_name;
+			rename = prompt( question + ' to ' + target_name + ' ?' +
+				'\n Or enter different name to rename:', source_name);
 		}
-		
-		WebDAV.MOVE(source_path, target_path, function() {
-			Controller('directory').apply(column, [app(key)]);
-			// TODO: refresh to target dir...
-			if (!onlyRename)
-				Controller('directory').apply(other_column, [target_path + '*']);
+
+		if (rename == null) return;
+		if (typeof(rename) == 'string' && rename != source_name) {
+			onlyRename = true;
+			target_path = href + rename;
+		}
+
+		$.each(selected, function(i) {
+			var $TR = $(this), url = href + $TR.find('.name').text();
+			WebDAV.MOVE(url, target_path, function() {
+				if (i + 1 == selected.length) {
+					Controller('directory').apply(column, [app(key)]);
+					if (!onlyRename)
+						Controller('directory').apply(other_column, [glob]);
+				}
+			});
 		});
 	});
 	$('a[name="delete"]').click(function(e) {
@@ -212,8 +235,13 @@ jQuery(function($) {
 	$columns.find('.data').click(function(e) {
 		e.preventDefault();
 
-		$TR = $('TR', this).removeClass('selected').has(e.target);
-		$TR.addClass('selected');
+		if (e.metaKey) {
+			$TR = $('TR', this).has(e.target);
+			$TR.toggleClass('selected');
+		} else {
+			$TR = $('TR', this).removeClass('selected').has(e.target);
+			$TR.addClass('selected');
+		}
 
 		var isAnchor = $(e.target).is('A');
 		if (isAnchor) {
