@@ -12,7 +12,9 @@ class Put
     @tempfile = params[:file][:tempfile]
     @tmp_dir = File.join sinatra.root, 'tmp', 'plupload'
     @tmp_path = File.join @tmp_dir, params['name'].to_s.gsub(/[^\w\._]+/, '')
-    purged_filename = params[:file][:filename].to_s.gsub(/[^\w\._]+/, '')
+    #fixes chrome generating strange blob... filename
+    filename = File.basename params[:splat].first
+    purged_filename = filename.gsub(/[^\w\._]+/, '')
     destination_dir = File.dirname params[:splat].first
     @public_path = File.join sinatra.public, destination_dir, purged_filename
 
