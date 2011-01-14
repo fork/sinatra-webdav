@@ -141,7 +141,7 @@ module DAV
         sprintf('%x-%x-%x', stat.ino, stat.size, stat.mtime.to_i)
       end
       def resourcetype
-        "<resourcetype>#{'<collection/>' if collection?}</resourcetype>"
+        '<collection/>' if collection?
       end
       def getcontenttype
         collection?? "text/html" : Rack::Mime.mime_type(File.extname(resource.path))
