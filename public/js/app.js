@@ -1,9 +1,10 @@
 jQuery(function($) {
-	// var db = openDatabase('WebDAV Client', '1.0', 'WebDAV Client', 1024^2)
-	//
-	// db.transaction(function(tx) {
-	// 	tx.executeSql('CREATE TABLE IF NOT EXISTS bookmarks(id, name, url)');
-	// });
+
+	function pad(str, padString, length) {
+		str += '';
+		while (str.length < length) str = padString + str;
+		return str;
+	}
 
 	var $columns = $('#left, #right');
 	var LI          = '<LI>',
@@ -24,54 +25,103 @@ jQuery(function($) {
 		}
 	}
 	function getHost() {
-		loc = window.location;
-		port = loc.port == '' ? '' : ':' + loc.port;
-		return loc.protocol + '//' + loc.host +	port;
+		return location.protocol + '//' + location.host;
+	}
+
+	// http://dense13.com/blog/2009/05/03/converting-string-to-slug-javascript/
+	function generateSlug(str) {
+	  str = str.replace(/^\s+|\s+$/g, ''); // trim
+	  str = str.toLowerCase();
+
+	  // remove accents, swap ñ for n, etc
+	  var from = "àáäâèéëêìíïîòóöôùúüûñç·/_,:;";
+	  var to   = "aaaaeeeeiiiioooouuuunc------";
+	  for (var i=0, l=from.length ; i<l ; i++) {
+	    str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+	  }
+
+	  str = str.replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+	    .replace(/\s+/g, '-') // collapse whitespace and replace by -
+	    .replace(/-+/g, '-'); // collapse dashes
+
+	  return str;
+	}
+
+	var trailing_slash = /\/$/;
+
+	function mkcolRecursive(paths_array, callback) {
+		var a = paths_array,
+			path = a.shift();
+
+		if (typeof path === 'undefined') callback();
+		else {
+			if (!trailing_slash.test(path)) path += '/';
+
+			$.ajax({
+				type: 'MKCOL', url: path,
+				complete: function() { mkcolRecursive(a, callback); }
+			});
+		}
 	}
 
 	function button(href, html) {
 		return $(A_button).attr('href', href).html(html);
 	}
 
+	var ROW = $('<TR><TD CLASS="name"><A></A></TD><TD CLASS="size"></TD><TD CLASS="type"></TD><TD CLASS="mtime"></TD></TR>');
+
 	$columns.find('.data table').sorrow();
-    $columns.bind('webdav.directory', function(e, _, data) {
-		data.find('.type').each(function() {
-			if (this.innerText == 'directory') {
-				var SPAN = hidden('-1 ');
-				$(this).siblings('.size').prepend(SPAN);
-			}
-		});
-		data.find('.mtime').each(function() {
-			var uts = new Date(this.innerText).valueOf(),
-				SPAN = hidden(uts + ' ');
+//    $columns.bind('webdav.directory', function(e, _, data) {
+    $columns.bind('webdav.directory', function(e) {
+		var resources = $(this).data('resources'), rows = $();
 
-			$(this).prepend(SPAN);
+		$.each(resources, function() {
+			if (/(^\.|\.include$)/.test(this.basename)) return;
+			if (this.basename === 'application') return;
+
+			var isCollection = /\/$/.test(this.href);
+			var row = ROW.clone(), resource = this;
+
+			row.find('.name a').attr('href', this.href).text(this.basename);
+
+			var typeValue = isCollection ? 'directory' : this.contentType;
+			row.find('.type').text(typeValue);
+
+			var size = row.find('.size').append(this.contentLength);
+			if (isCollection) size.prepend(hidden('-1'));
+
+			var value = this.lastModified;
+			row.find('.mtime').append(hidden(value.valueOf() + ' '), value.toLocaleString());
+
+			rows = rows.add(row);
 		});
 
-		rows = data.children('tr');
 		$('.data table', this).sorrow('overwrite', { rows: rows });
 		$('.data table', this).sorrow('sort');
-	}).bind('webdav.directory', function(e, href) {
+	}).bind('webdav.directory', function(e) {
+		var href = $(this).data('href');
 		var $UL = $('.breadcrumb', this), key = keygen(this, 'href');
 		$UL.empty();
 
 		app(key, href);
-		var path     = href.substr(href.indexOf('/', 8)),
+		var path     = '/' + href.split('/').slice(3).join('/'),
 		    dirnames = path.split('/');
 
 		dirnames.pop();
 		dirnames.shift();
 
-		$(LI).append(button('/*', '/')).prependTo($UL);
+//		$(LI).append(button('/*', '/')).prependTo($UL);
+		$(LI).append(button('/', '/')).prependTo($UL);
 		$.each(dirnames, function(i) {
-			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/*';
+//			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/*';
+			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/';
 			$(LI).append(button(path, this.toString())).prependTo($UL);
 		});
 
 		$UL.children(':first-child').addClass('first');
     }).data('index', 0).each(function() {
 		var key = keygen(this, 'href'), href = app(key);
-		if (href == null) href = location.href + '*';
+		if (href == null) href = location.href;
 		Controller('directory').apply(this, [href]);
 	}).click(function(e) {
 		var $$ = $(this), isFocused = $$.is('.focus');
@@ -87,8 +137,8 @@ jQuery(function($) {
 
 		var $$ = $(this), isActive = $$.is('.active');
 		if (isActive) {
-			var TABLE = $(this).parent().find('.data').get(0);
-			Controller('directory').apply(TABLE, [e.target.href]);
+			var column = $(this).parents('.column').get(0);
+			Controller('directory').apply(column, [e.target.href]);
 		} else {
 			$$.addClass('active');
 			e.stopPropagation();
@@ -105,6 +155,8 @@ jQuery(function($) {
 		var dirname = prompt('This directory takes it, you name it:');
 		if (dirname == null) return;
 
+		if (!(/\/$/).test(dirname)) dirname += '/';
+
 		var column = $columns.filter('.focus').get(0),
 			other_column = $columns.not('.focus'),
 			key    = keygen(column, 'href'),
@@ -119,99 +171,133 @@ jQuery(function($) {
 				Controller('directory').apply(other_column, [app(key)]);
 		});
 	});
+
+	// FIXME copy and move are the same except the VERB
 	$('a[name="copy"]').click(function(e) {
 		e.preventDefault();
 
-		var column = $columns.filter('.focus'),
-			other_column = $columns.not('.focus'),
-			selected = column.find('tr.selected'),
-			target = other_column.find('tr.selected'),
-		 	key    = keygen(column, 'href'),
-		 	href   = app(key).replace(/\*$/, ''),
-			host = getHost(),
-			question = 'Do you really want to copy ',
-			target_path, target_name, glob;
+		var sourceColumn = $columns.filter('.focus'),
+		    resources    = sourceColumn.find('.selected'),
+		    countdown    = length = resources.length;
 
-		if (target.length > 0) {
-			glob = '/*';
-			target_name = target.find('td.name').first().text();
-			target_path = href + target_name;
-		} else {
-			glob = '*'
-			target_name = other_column.find('li.first a').text();
-			target_path = host + other_column.find('li.first a')
-				.attr('href').replace(/\*$/, '');
-		}
+		if (length == 0) return;
 
-		if (selected.length > 1)
-			question += 'selected resources';
-		else
-			question += selected.find('td.name').text();
+		var destination;
 
-		var sure = confirm( question + ' to ' + target_name + ' ?');
-		if(!sure) return;
+		var targetColumn = $columns.not('.focus'),
+		    targetBase   = targetColumn.data('href'),
+		    targetHost   = targetBase.split('/').slice(0, 3).join('/'),
+		    targetDir    = '/' + targetBase.split('/').slice(3).join('/'),
+		    sourceBase   = sourceColumn.data('href');
 
-		$.each(selected, function(i) {
-			var $TR = $(this), url = href + $TR.find('.name').text();
-			WebDAV.COPY(url, target_path, function() {
-				if (i + 1 == selected.length)
-					Controller('directory').apply(other_column, [target_path + glob]);
+		if (length == 1) {
+			destination = targetDir + resources.find('.name a').text();
+			destination = prompt('Copy file to:', destination);
+			if (!destination) return;
+
+			if (destination.slice(0, 1) != '/') {
+				destination = sourceBase + destination;
+			} else {
+				destination = targetHost + destination;
+			}
+
+			targetBase = destination.split('/');
+			targetBase.pop();
+			targetBase = targetBase.join('/') + '/';
+
+			var source = resources.find('.name a'),
+			    uri = source.attr('href');
+
+			if (/\/$/.test(uri)) destination += '/';
+
+			WebDAV.COPY(uri, destination, function() {
+				Controller('directory').call(targetColumn, targetBase);
+				Controller('directory').call(sourceColumn, sourceBase);
 			});
-		});
+		} else {
+			targetDir = prompt('Copy files to:', targetDir);
+			if (!targetDir) return;
+
+			if (targetDir.slice(0, 1) != '/') {
+				targetBase = sourceBase + targetDir;
+			}
+
+			resources.each(function() {
+				var source = $('.name a', this), uri = source.attr('href');
+
+				destination = targetBase + source.text();
+				if (/\/$/.test(uri)) destination += '/';
+
+				WebDAV.COPY(uri, destination, function() {
+					if (--countdown > 0) return;
+					Controller('directory').call(targetColumn, targetBase);
+					Controller('directory').call(sourceColumn, sourceBase);
+				});
+			});
+		}
 	});
 	$('a[name="move"]').click(function(e) {
 		e.preventDefault();
 
-		var column = $columns.filter('.focus'),
-			other_column = $columns.not('.focus'),
-			selected = column.find('tr.selected'),
-			target = other_column.find('tr.selected'),
-			target_name = target.find('td.name').first().text(),
-		 	key    = keygen(column, 'href'),
-		 	href   = app(key).replace(/\*$/, ''),
-			host = getHost(),
-			question = 'Do you really want to move ',
-			target_path, target_name, glob, onlyRename = false;
+		var sourceColumn = $columns.filter('.focus'),
+		    resources    = sourceColumn.find('.selected'),
+		    countdown    = length = resources.length;
 
-		if (target.length > 0) {
-			target_name = target.find('td.name').first().text();
-			target_path = href + target_name;
-			glob = target_path + '/*';
-		} else {
-			
-			target_name = other_column.find('li.first a').text();
-			target_path = host + other_column.find('li.first a')
-				.attr('href').replace(/\*$/, '');
-			glob = target_path + '*'
-		}
+		if (length == 0) return;
 
-		var rename;
-		if (selected.length > 1) {
-			question += 'selected resources';
-			rename = confirm( question + ' to ' + target_name + ' ?');
-		} else {
-			var source_name = selected.find('td.name').text();
-			question += source_name;
-			rename = prompt( question + ' to ' + target_name + ' ?' +
-				'\n Or enter different name to rename:', source_name);
-		}
+		var destination;
 
-		if (rename == null) return;
-		if (typeof(rename) == 'string' && rename != source_name) {
-			onlyRename = true;
-			target_path = href + rename;
-		}
+		var targetColumn = $columns.not('.focus'),
+		    targetBase   = targetColumn.data('href'),
+		    targetHost   = targetBase.split('/').slice(0, 3).join('/'),
+		    targetDir    = '/' + targetBase.split('/').slice(3).join('/'),
+		    sourceBase   = sourceColumn.data('href');
 
-		$.each(selected, function(i) {
-			var $TR = $(this), url = href + $TR.find('.name').text();
-			WebDAV.MOVE(url, target_path, function() {
-				if (i + 1 == selected.length) {
-					Controller('directory').apply(column, [app(key)]);
-					if (!onlyRename)
-						Controller('directory').apply(other_column, [glob]);
-				}
+		if (length == 1) {
+			destination = targetDir + resources.find('.name a').text();
+			destination = prompt('Move file to:', destination);
+			if (!destination) return;
+
+			if (destination.slice(0, 1) != '/') {
+				destination = sourceBase + destination;
+			} else {
+				destination = targetHost + destination;
+			}
+
+			targetBase = destination.split('/');
+			targetBase.pop();
+			targetBase = targetBase.join('/') + '/';
+
+			var source = resources.find('.name a'),
+			    uri = source.attr('href');
+
+			if (/\/$/.test(uri)) destination += '/';
+
+			WebDAV.MOVE(uri, destination, function() {
+				Controller('directory').call(targetColumn, targetBase);
+				Controller('directory').call(sourceColumn, sourceBase);
 			});
-		});
+		} else {
+			targetDir = prompt('Move files to:', targetDir);
+			if (!targetDir) return;
+
+			if (targetDir.slice(0, 1) != '/') {
+				targetBase = sourceBase + targetDir;
+			}
+
+			resources.each(function() {
+				var source = $('.name a', this), uri = source.attr('href');
+
+				destination = targetBase + source.text();
+				if (/\/$/.test(uri)) destination += '/';
+
+				WebDAV.MOVE(uri, destination, function() {
+					if (--countdown > 0) return;
+					Controller('directory').call(targetColumn, targetBase);
+					Controller('directory').call(sourceColumn, sourceBase);
+				});
+			});
+		}
 	});
 	$('a[name="delete"]').click(function(e) {
 		var $column  = $columns.filter('.focus'),
@@ -236,10 +322,8 @@ jQuery(function($) {
 				$OTHER_TR = other_column.find('td.name').filter(function() {
 					return $(this).text() == name;
 				}),
-				url = href + name;
-				if($OTHER_TR)
-					console.log($OTHER_TR.length);
-			WebDAV.DELETE(url, function() { 
+				url = $TR.find('.name a').attr('href');
+			WebDAV.DELETE(url, function() {
 				$TR.remove();
 				if(href == other_href && $OTHER_TR.length != 0)
 					$OTHER_TR.parent().remove();
@@ -253,6 +337,9 @@ jQuery(function($) {
 	$columns.find('.data').click(function(e) {
 		e.preventDefault();
 
+		var wasSelected = $(e.target).is('A') && $(e.target).parent().parent()
+			.hasClass('selected');
+
 		if (e.metaKey) {
 			$TR = $('TR', this).has(e.target);
 			$TR.toggleClass('selected');
@@ -262,16 +349,18 @@ jQuery(function($) {
 		}
 
 		var isAnchor = $(e.target).is('A');
-		if (isAnchor) {
+		if (isAnchor && wasSelected) {
 			var A    = e.target,
 				$A   = $(A),
-				type = $A.parents('TR').children('.type').text();
+				type = $A.parents('TR').children('.type').text(),
+				column = $(this).parents('.column').get(0);
 
 			if (type.length == 0) type = 'directory';
 
-			Controller(type).apply(this, [A.href]);
+			Controller(type).apply(column, [A.href]);
 		}
 	});
+
 
 	// TODO: Swap configuration to application configuration file
 	$('.uploader').pluploadQueue({

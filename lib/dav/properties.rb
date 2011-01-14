@@ -184,9 +184,9 @@ module DAV
 
       def find_resources(depth)
         case depth
-        when '0'
+        when 0
           [resource]
-        when '1'
+        when 1
           [resource] + resource.children
         else
           [resource] + resource.descendants
