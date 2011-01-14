@@ -1,26 +1,104 @@
-Bundler.require
-require "#{ File.dirname __FILE__ }/sinatra/templates/slim"
-require "#{ File.dirname __FILE__ }/dav/resource"
-require "#{ File.dirname __FILE__ }/uploader"
-
-
 # Sinatra based WebDAV implementation
 #
 # see http://www.webdav.org/specs/rfc4918.html
 class WebDAV < ::Sinatra::Base
-  set :root, File.expand_path('../..', __FILE__)
-  disable :dump_errors, :static
+  # Integrates hoptoad...
+  #use HoptoadNotifier::Rack
   enable :raise_errors
 
-  enable :sessions
+  # Test hoptoad integration...
+  get('/hoptoad') { raise 'Bam!' }
+
+  set :root, File.expand_path('../..', __FILE__)
+  disable :dump_errors, :static
+
+  # Unless we reenable OmniAuth we don't need sessions.
+  #enable :sessions
+
+  mime_type :include, 'text/html'
+
+  register Verbs
 
   helpers do
     def protected!
       # TODO is return_to uri needed?
-      
+
       # USE TO TEST WITH LITMUS (and comment out authorized stuff)
       settings.set :public, File.join(settings.root, CUSTOM_PUBLIC)
+      DAV::Resource.root = File.join(settings.root, CUSTOM_PUBLIC)
+
+      # @auth ||= Rack::Auth::Basic::Request.new request.env
+      # 
+      # @auth.provided? && @auth.basic? && @auth.credentials == %w[ admin pr0t3ct ] or
+      # request.env['HTTP_ORIGIN'] == 'http://vizard.fork.de' or
+      # begin
+      #   response['WWW-Authenticate'] = 'Basic realm="JH Stiftung"'
+      #   halt 401
+      # end
+
       #unauthorized unless authorized?
+    end
+    def request_uri
+      URI URI.escape(request.url)
+    end
+    def resource
+      @resource ||= DAV::Resource.new request_uri
+    end
+    def destination_uri
+      URI request.env['HTTP_DESTINATION']
+    end
+    def destination
+      @destination ||= resource.join destination_uri
+    end
+
+    def ok(*args)
+      halt 200, *args
+    end
+    def created(*args)
+      halt 201, *args
+    end
+    def no_content(*args)
+      halt 204, *args
+    end
+    def multi_status(*args)
+      halt 207, *args
+    end
+    def bad_request(*args)
+      error 400, *args
+    end
+    def unauthorized(*args)
+      error 401, *args
+    end
+    def forbidden(*args)
+      error 403, *args
+    end
+    def not_allowed(*args)
+      error 405, *args
+    end
+    def conflict(*args)
+      error 409, *args
+    end
+    def precondition_failed(*args)
+      error 412, *args
+    end
+    def unsupported(*args)
+      error 415, *args
+    end
+
+    MAPPING = { '0' => 0, '1' => 1, 'infinity' => DAV::Infinity }
+    def depth(options)
+      mapping = MAPPING
+      exceptions = Array options[:except]
+
+      mapping = mapping.inject({}) do |mem, (key, value)|
+        mem[key] = value unless exceptions.include? value
+        mem
+      end unless exceptions.empty?
+
+      mapping.fetch request.env['HTTP_DEPTH'], options[:default]
+    end
+    def overwrite?
+      request.env['HTTP_OVERWRITE'] == 'T'
     end
     def authorized?
       not session[:user].nil?
@@ -28,10 +106,10 @@ class WebDAV < ::Sinatra::Base
   end
 
   # testuser 'admin' 'whatever' / folder group_files/admins needed in root
-  use OmniAuth::Builder do
-    provider OmniAuth::Strategies::CAS, { :cas_server => 'https://cas.fork.de',
-      :cas_service_validate_url => 'https://cas.fork.de/proxyValidate' }
-  end
+  #use OmniAuth::Builder do
+  #  provider OmniAuth::Strategies::CAS, { :cas_server => 'https://cas.fork.de',
+  #    :cas_service_validate_url => 'https://cas.fork.de/proxyValidate' }
+  #end
 
   get '/logout' do
     session[:user] = nil
@@ -68,65 +146,55 @@ class WebDAV < ::Sinatra::Base
   #
   # see http://www.webdav.org/specs/rfc4918.html#rfc.section.18
   OPTIONS_HEADER = { 'DAV' => '1', 
-    'Allow' => 'OPTIONS, HEAD, GET, MKCOL, PUT, DELETE, COPY, MOVE, PROPFIND, PROPPATCH' }
+    'Allow' => 'OPTIONS, HEAD, GET, PUT, DELETE, MKCOL, COPY, MOVE, PROPFIND, PROPPATCH' }
 
-  route 'OPTIONS', '/*' do
+  route 'OPTIONS', '*' do
     headers OPTIONS_HEADER
     ok
   end
 
-  # Generic structure for a WebDAV method:
-  # route 'METHOD', PATH do
-  #   setup credentials
-  #   check credentials
-  #   do action
-  #   response (ok, forbidden, ...)
-  # end
-
-  route 'MKCOL', '/*' do
+  mkcol '*' do
     protected!
-    path = File.join options.public, params[:splat][0]
 
-    forbidden if path.include? STAR
-    conflict unless File.exists? File.dirname(path)
-    not_allowed if File.exists? File.expand_path(path)
+    conflict if resource != resource.parent && !resource.parent.exist?
+    not_allowed if resource.exist?
     unsupported if request.body.size > 0
 
-    Dir.mkdir path
+    resource.mkcol
 
     ok
   end
 
-  route 'MOVE', '/*' do
+  move '*' do
     protected!
-    source = File.join options.public, params[:splat][0]
-    dest = File.join options.public, URI.parse(request.env['HTTP_DESTINATION']).path
-    exists = File.exist? dest
-    overwrite = request.env['HTTP_OVERWRITE'] == 'T'
-    
-    precondition_failed if not overwrite and exists
-    not_allowed if not overwrite and exists and !File.directory?(dest)
 
-    FileUtils.mv source, dest, :force => true
+    not_found unless resource.exist?
+    conflict unless destination.parent.exist?
+
+    exists = destination.exist?
+    precondition_failed if exists and not overwrite?
+
+    resource.move destination, depth(:except => 1, :default => DAV::Infinity)
 
     exists ? no_content : created
   end
 
-  route 'COPY', '/*' do
+  copy '*' do
     protected!
-    source = File.join options.public, params[:splat][0]
-    dest = File.join options.public, URI.parse(request.env['HTTP_DESTINATION']).path
-    exists = File.exist? dest
+    path = params[:splat].first
 
-    precondition_failed if request.env['HTTP_OVERWRITE'] == 'F' and exists
-    conflict unless File.exist?(File.dirname(dest))
+    not_found unless resource.exist?
+    conflict unless destination.parent.exist?
 
-    FileUtils.cp_r source, dest
-    
+    exists = destination.exist?
+    precondition_failed if exists and not overwrite?
+
+    resource.copy destination, depth(:except => 1, :default => DAV::Infinity)
+
     exists ? no_content : created
   end
 
-  route 'PROPFIND', '/*' do
+  propfind '/*' do
     protected!
     path = Pathname File.join(options.public, params[:splat][0])
     xml = Nokogiri::XML request.body.read
@@ -134,37 +202,40 @@ class WebDAV < ::Sinatra::Base
     bad_request unless xml.errors.empty?
     not_found unless path.exist?
     
-    resource = Dav::Resource.new path, request, options
-
-    if xml.at_css("propfind allprop")
-      names = resource.property_names
-    else
-      names = xml.at_css("propfind prop").children.map {|e|
-        e unless e.node_name == 'text'}.compact
-      names = resource.property_names if names.empty?
-      bad_request if names.empty?
-    end
-
-    host = "#{request.scheme}://#{request.host}/"
-
-    builder = Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
-      xml.multistatus('xmlns' => "DAV:") do
-        for r in resource.find_resources
-          xml.response do
-            xml.href "#{host}#{r.path.relative_path_from(Pathname(options.public))}"
-            propstats xml, r.get_properties(names)
-          end
-        end
-      end
-    end
+    # resource = Dav::Resource.new path, request, options
+    # 
+    # if prop = xml.at_css("propfind prop")
+    #   names = prop.children.map {|e|
+    #     e unless e.node_name == 'text'}.compact
+    #   names = resource.property_names if names.empty?
+    #   bad_request if names.empty?
+    # else
+    #   #xml.at_css("propfind allprop")
+    #   names = resource.property_names
+    # end
+    # 
+    # host = "#{ request.scheme }://#{ request.host_with_port }"
+    # 
+    # construct = Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |builder|
+    #   builder.multistatus('xmlns' => "DAV:") do
+    #     for r in resource.find_resources
+    #       builder.response do
+    #         # RADAR in my reality, we don't need a host...
+    #         builder.href "#{ host }#{ r.public_path }"
+    #         propstats builder, r.get_properties(names)
+    #       end
+    #     end
+    #   end
+    # end
 
     content_type 'application/xml'
 
-    body builder.to_xml
+    body resource.properties.to_xml(xml, depth(:default => DAV::Infinity))
+    #body construct.to_xml
     multi_status
   end
 
-  route 'PROPPATCH', '/*' do
+  proppatch '/*' do
     protected!
     path = Pathname File.join(options.public, params[:splat][0])
     xml = Nokogiri::XML request.body.read
@@ -172,57 +243,60 @@ class WebDAV < ::Sinatra::Base
     bad_request unless xml.errors.empty?
     not_found unless path.exist?
     
-    resource = Dav::Resource.new path, request, options
-
-    ns = xml.namespaces
-    ns.delete 'xmlns'
-
-    selector = if ns.empty?
-      'propertyupdate set prop'
-    else
-      sel = ns.keys.first.split(':').last
-      "#{sel}|propertyupdate #{sel}|set #{sel}|prop"
-    end
-
-    rem_selector = if ns.empty?
-      'propertyupdate remove prop'
-    else
-      sel = ns.keys.first.split(':').last
-      "#{sel}|propertyupdate #{sel}|remove #{sel}|prop"
-    end
-
-    prop_set = xml.css(selector).children.map {|e|
-      e unless e.node_name == 'text'}.compact
-    
-    prop_rem = xml.css(rem_selector).children.map {|e|
-      e unless e.node_name == 'text'}.compact
-
-    host = "#{request.scheme}://#{request.host}/"
-
-    builder = Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
-      xml.multistatus('xmlns' => "DAV:") do
-        for r in resource.find_resources
-          xml.response do
-            xml.href "#{host}#{r.path.relative_path_from(Pathname(options.public))}"
-            propstats xml, r.set_properties(prop_set)
-            propstats xml, r.remove_properties(prop_rem)
-          end
-        end
-      end
-    end
+    # resource = Dav::Resource.new path, request, options
+    # 
+    # ns = xml.namespaces
+    # ns.delete 'xmlns'
+    # 
+    # selector = if ns.empty?
+    #   'propertyupdate set prop'
+    # else
+    #   sel = ns.keys.first.split(':').last
+    #   "#{sel}|propertyupdate #{sel}|set #{sel}|prop"
+    # end
+    # 
+    # rem_selector = if ns.empty?
+    #   'propertyupdate remove prop'
+    # else
+    #   sel = ns.keys.first.split(':').last
+    #   "#{sel}|propertyupdate #{sel}|remove #{sel}|prop"
+    # end
+    # 
+    # prop_set = xml.css(selector).children.map {|e|
+    #   e unless e.node_name == 'text'}.compact
+    # 
+    # prop_rem = xml.css(rem_selector).children.map {|e|
+    #   e unless e.node_name == 'text'}.compact
+    # 
+    # host = "#{request.scheme}://#{request.host}/"
+    # 
+    # construct = Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |builder|
+    #   builder.multistatus('xmlns' => "DAV:") do
+    #     for r in resource.find_resources
+    #       builder.response do
+    #         builder.href "#{ host }#{ r.path.relative_path_from Pathname(options.public) }"
+    #         propstats builder, r.set_properties(prop_set)
+    #         propstats builder, r.remove_properties(prop_rem)
+    #       end
+    #     end
+    #   end
+    # end
 
     content_type 'application/xml'
 
-    body builder.to_xml
+    #body construct.to_xml
+    
+    body resource.properties.update(xml)
     multi_status
   end
 
-  put '/*' do
+  put '*' do
     protected!
-    path = File.join options.public, params[:splat][0]
-    conflict unless File.exists? File.dirname(path)
-  
-    write request.body, path
+
+    conflict unless resource.parent.exist?
+    resource.put request.body
+
+    #Uploader::Processing.new(resource.path, options.public).process!
   
     created
   end
@@ -242,30 +316,55 @@ class WebDAV < ::Sinatra::Base
 
   delete '/*' do
     protected!
-    path = File.join options.public, params[:splat][0]
 
-    not_found unless File.exists? path
-    FileUtils.rmtree path
+    not_found unless resource.exist?
+    resource.delete
 
     ok
   end
 
-  get '/*' do
+  get '/:locale/teaser' do
     protected!
-    root = options.public
-    glob = make_glob params[:splat].first, root
+    teaser = Dir["#{settings.public}/#{params[:locale]}/**/#{params[:type]}.include"]
+    teaser.map! {|t|
+      {
+        :html => File.read(t),
+        :ssi => URI.escape("<!--#include virtual=\"#{t.sub(settings.public, '')}\" -->")
+      } 
+    }.join
 
-    forbidden if glob.include? STARS
-    not_found unless glob.include? STAR or File.exists? glob
-    return File.read(glob) if not glob.include? STAR and File.file? glob
+    slim :teaser, :locals => {:html_teasers => teaser}, :layout => false
+  end
 
-    list = Dir[glob].map! { |path| file_values path, root }
-    path = glob[root.length..-1]
+  get '*' do
+    protected!
 
-    slim :index, :locals => {
-      :title => "/#{ path }",
-      :list => list
-    }
+    if resource.exist? and not resource.collection?
+      content_type resource.type
+      body resource.get
+      # what about open images in new tab...
+      #send_file(glob) if not glob.include? STAR and File.file? glob
+      #return File.read(glob) if not glob.include? STAR and File.file? glob
+    else
+      # TODO use propfind with DEPTH 1 instead
+      # TODO make this a AutoIndex extension
+      root = options.public
+      glob = make_glob params[:splat].first, root
+
+      unless glob.include? STAR
+        # why forbidden? i need this...
+        #forbidden if glob.include? STARS
+        not_found
+      else
+        list = Dir[glob].map! { |path| file_values path, root }
+        path = glob[root.length..-1]
+
+        slim :index, :locals => {
+          :title => "/#{ path }",
+          :list => list
+        }
+      end
+    end
   end
 
   def make_glob(path, root)
@@ -296,93 +395,45 @@ class WebDAV < ::Sinatra::Base
     return path, name, size, type, mtime
   end
 
-  def propstats(xml, stats)
-    return if stats.empty?
-
-    for status, props in stats
-      xml.propstat do
-        xml.prop do
-          for name, value in props
-            if value.is_a?(Nokogiri::XML::DocumentFragment)
-              xml << value.children.first.to_xml
-              #xml.send(name) do
-              #  nokogiri_convert(xml, value.children.first)
-              #end
-            else
-              xml.send name, value
-            end
-          end
-        end
-        xml.status "HTTP/1.1 #{status.status_line}"
-      end
-    end
-  end
-
-  # not needed... maybe
-  def nokogiri_convert(xml, element)
-    if element.children.empty?
-      if element.text?
-        element.content
-        #xml.send element.name, element.content, element.attributes
-      else
-        xml.send element.name, element.attributes
-      end
-    else
-      xml.send(element.name, element.attributes) do
-        element.children.each do |child|
-          nokogiri_convert(xml, child)
-        end
-      end
-    end
-  end
-
-  def ok
-    halt 200
-  end
-  def created
-    halt 201
-  end
-  def no_content
-    halt 204
-  end
-  def multi_status
-    halt 207
-  end
-  def bad_request
-    error 400
-  end
-  def unauthorized
-    error 401
-  end
-  def forbidden
-    error 403
-  end
-  def not_allowed
-    error 405
-  end
-  def conflict
-    error 409
-  end
-  def precondition_failed
-    error 412
-  end
-  def unsupported
-    error 415
-  end
-
-  def write(io, path)
-    tempfile = "#{ path }.#{ Process.pid }.#{ Thread.current.object_id }"
-
-    open(tempfile, 'wb') do |file|
-      while part = io.read(8192)
-        file << part
-      end
-    end
-
-    File.rename(tempfile, path)
-  ensure
-    File.unlink(tempfile) rescue nil
-  end
+  # def propstats(xml, stats)
+  #   return if stats.empty?
+  # 
+  #   for status, props in stats
+  #     xml.propstat do
+  #       xml.prop do
+  #         for name, value in props
+  #           if value.is_a?(Nokogiri::XML::DocumentFragment)
+  #             xml << value.children.first.to_xml
+  #             #xml.send(name) do
+  #             #  nokogiri_convert(xml, value.children.first)
+  #             #end
+  #           else
+  #             xml.send name, value
+  #           end
+  #         end
+  #       end
+  #       xml.status "HTTP/1.1 #{status.status_line}"
+  #     end
+  #   end
+  # end
+  # 
+  # # not needed... maybe
+  # def nokogiri_convert(xml, element)
+  #   if element.children.empty?
+  #     if element.text?
+  #       element.content
+  #       #xml.send element.name, element.content, element.attributes
+  #     else
+  #       xml.send element.name, element.attributes
+  #     end
+  #   else
+  #     xml.send(element.name, element.attributes) do
+  #       element.children.each do |child|
+  #         nokogiri_convert(xml, child)
+  #       end
+  #     end
+  #   end
+  # end
 
   def no_cache_header
     { 'Content-type' => 'text/plain; charset=UTF-8',

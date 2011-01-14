@@ -1,3 +1,5 @@
+require "#{ File.dirname __FILE__ }/uploader"
+
 class Put
 
   SUCCESS_MESSAGE = '{"jsonrpc" : "2.0", "result" : null, "id" : "id"}'
@@ -16,7 +18,8 @@ class Put
     filename = File.basename params[:splat].first
     purged_filename = filename.gsub(/[^\w\._]+/, '')
     destination_dir = File.dirname params[:splat].first
-    @public_path = File.join sinatra.public, destination_dir, purged_filename
+    @public_path = sinatra.public
+    @path = File.join @public_path, destination_dir, purged_filename
 
     append = params[:chunks] && Integer(params[:chunk]) > 0
     @mode = append ? 'a' : ::File::TRUNC | ::File::WRONLY | ::File::CREAT
@@ -48,7 +51,8 @@ class Put
   protected
 
   def move_to_destination
-    unless FileUtils.mv(@tmp_path, @public_path, :force => true)
+    unless FileUtils.mv(@tmp_path, @path, :force => true) and 
+        Uploader::Processing.new(@path, @public_path).process!
       remove_tmp_file
       raise FailedMoveFile
     end

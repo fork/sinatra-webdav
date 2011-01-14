@@ -1,234 +1,142 @@
-module Dav
-  class Resource
-    require "#{ File.dirname __FILE__ }/http_status"
-    include Dav::HTTPStatus
-    attr_reader :path
+module DAV
+  class Resource < Struct.new(:uri)
+    include EventHandling
 
-    def initialize(path, request, options = {})
-      @path = Pathname path
-      @request = request
-      @options = options
-      @xml_props = []
-      @xml_props_remove = []
-    end
-
-    def find_resources
-      case @request.env['HTTP_DEPTH']
-      when '0'
-        [self]
-      when '1'
-        [self] + @path.children
-      else
-        [self] + descendants
+    class LogMethod < Struct.new(:method)
+      def call(resource)
+        $stderr.puts "#{ method } #{ resource }"
       end
     end
+    #%w[ get put mkcol delete copy move ].each do |method|
+    #  before method.to_sym, '*', LogMethod.new(method.upcase)
+    #end
 
-    def remove_properties(nodes)
-       stats = Hash.new { |h, k| h[k] = [] }
-       for node in nodes
-         begin
-           map_exceptions do
-             stats[OK] << [node.name, remove_property(node)]
-           end
-         rescue Status
-           stats[$!] << name
-         end
-       end
-       prop_path.exist?? update_xml_props! : build_xml_props!
-       stats
+    extend Module.new { attr_reader :backend }
+
+    def self.backend=(backend)
+      include @backend = backend
+      # RADAR overwrite supported methods?
     end
 
-    def set_properties(nodes)
-       stats = Hash.new { |h, k| h[k] = [] }
-       for node in nodes
-         begin
-           map_exceptions do
-             stats[OK] << [node.name, set_property(node)]
-           end
-         rescue Status
-           stats[$!] << name
-         end
-       end
-       prop_path.exist?? update_xml_props! : build_xml_props!
-       stats
+    alias resource class
+
+    def type
+      Rack::Mime.mime_type File.extname(uri.path)
     end
 
-    def set_property(node)
-      case node.name
-      when 'resourcetype'    then self.resource_type = node.content
-      when 'getcontenttype'  then self.content_type = node.content
-      when 'getetag'         then self.etag = node.content
-      when 'getlastmodified' then self.last_modified = Time.httpdate(node.content)
-      else @xml_props << node; Nokogiri::XML.fragment(node.to_xml)
+    def open(*args)
+      return super if resource.backend.supports? :open
+      raise NoMethodError
+    end
+    def children
+      @children ||= super
+    end
+    def descendants
+      collection = []
+
+      children_resources = children
+      while child = children_resources.shift
+        collection << child
+        children_resources.concat child.children if child.collection?
       end
-    rescue ArgumentError
-      raise HTTPStatus::Conflict
+
+      collection
     end
-
-    def remove_property(node)
-      @xml_props_remove << node; Nokogiri::XML.fragment(node.to_xml)
-    rescue ArgumentError
-      raise HTTPStatus::Conflict
-    end
-
-    def build_xml_props!
-      prop_builder do |xml|
-        clean_props(@xml_props).each do |p|
-          xml.prop do
-            xml << p.to_xml
-          end
-        end
-      end
-      File.open(prop_path, 'w') {|f| f.write(prop_builder.to_xml) }
-    end
-
-    def clean_props(props)
-      props.delete_if {|p| find_with_namespace(@xml_props_remove, p)}
-    end
-
-    def update_xml_props!
-      xml = Nokogiri::XML File.read(prop_path)
-
-      old_props = xml.css('properties prop').children
-      old_props_array = old_props.to_a
+    def ancestors
+      collection = []
       
-      @xml_props.each do |p|
-        node = find_with_namespace(old_props_array, p)
-        if node
-          old_props[old_props_array.index(node)].content = p.content
-        else
-          xml.at_css('properties') << "<prop>#{p.to_xml}</prop>"
-        end
-      end
-      @xml_props_remove.each do |p|
-        node = find_with_namespace(old_props_array, p)
-        if node
-          old_props[old_props_array.index(node)].remove
-        end
+      parent_resource = parent
+      until parent_resource == parent_resource.parent
+        collection << parent_resource
+        parent_resource = parent_resource.parent
       end
 
-      File.open(prop_path, 'w') {|f| f.write(xml) }
+      collection
     end
-
-    def prop_path
-      @prop_path ||= Pathname File.join(prop_dir, displayname)
-    end
-
-    def prop_dir
-      prop_root = File.join @options.root, 'properties', @path.sub(@options.root, '')
-      dir = collection?? prop_root : File.dirname(prop_root)
-      @prop_dir ||= FileUtils.mkpath(dir).first
-    end
-
-    def prop_builder
-      @prop_builder ||= Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
-        xml.properties do
-          yield xml if block_given?
-        end
-      end
-    end
-
-    def get_properties(names)
-      stats = Hash.new { |h, k| h[k] = [] }
-      for name in names
-        begin
-          map_exceptions do
-            stats[OK] << [name.is_a?(String) ? name : name.node_name, get_property(name)]
-          end
-        rescue Status
-          stats[$!] << name
-        end
-      end
-      stats
-    end
-
-    def get_property(name_or_element)
-      is_element = name_or_element.is_a?(Nokogiri::XML::Element)
-
-      name = is_element ? name_or_element.node_name : name_or_element
-      return send(name) if respond_to?(name)
-
-      return unless prop_path.exist?
-      
-      xml = Nokogiri::XML File.read(prop_path)
-      nodes = xml.css('properties prop').children
-      node = find_with_namespace nodes.to_a, name_or_element
-
-      return Nokogiri::XML.fragment(node.to_xml) if node
-    end
-
-    def property_names
-      %w[ creationdate
-          displayname
-          getlastmodified
-          getetag
-          resourcetype
-          getcontenttype
-          getcontentlength ]
-    end
-
     def collection?
-      @collection ||= stat.directory?
+      super
     end
-    def creationdate
-      stat.ctime
+    def mkcol
+      around :mkcol do
+        super
+      end
     end
-    def displayname
-      File.basename(@path)
-    end
-    def getlastmodified
-      stat.mtime
-    end
-    def getetag
-      sprintf('%x-%x-%x', stat.ino, stat.size, stat.mtime.to_i)
-    end
-    def resourcetype
-      Nokogiri::XML::fragment('<resourcetype><collection/></resourcetype>') if collection?
-    end
-    def getcontenttype
-      collection?? "text/html" : Rack::Mime.mime_type(File.extname(@path))
-    end
-    def getcontentlength
-      stat.size
+    def delete(header = {})
+      around :delete do
+        children.each { |child| child.delete header } if collection?
+        super
+      end
     end
 
-    def stat
-      @stat ||= File.stat(@path)
+    def join(path)
+      resource.new uri.merge(path)
     end
+    def parent
+      @parent ||= join "#{ File.dirname uri.path }/"
+    end
+    def basename
+      File.basename uri.path
+    end
+    def ==(other)
+      resource === other and uri == other.uri
+    end
+    def exist?
+      return super if resource.backend.supports? :exist?
+      return true if parent == self
+      parent.collection? and parent.children.include? self
+    end
+    def properties=(properties)
+      super properties
+    end
+    def properties
+      super
+    end
+    def get
+      around(:get) { open }
+    end
+    def put(source_io)
+      around :put do
+        source_io.binmode if source_io.respond_to?(:binmode)
+        open 'wb' do |io|
+          blocksize = io.stat.blksize
+          blocksize = 4096 unless blocksize and blocksize > 0
 
-    def find_with_namespace(set_array, node)
-      set_array.find {|n|
-        if n.namespace and node.namespace
-          n.name == node.name and n.namespace.href == node.namespace.href
-        else
-          n.name == node.name
+          while data = source_io.read(blocksize)
+            io << data
+          end
         end
-      }
-    end
-
-    def descendants(children = nil)
-      return [] unless collection?
-      children ||= path_children
-      children.each do |c|
-        children << c
-        children << descendants(c) if c.directory? 
-      end
-      children
-    end
-
-    def map_exceptions
-      yield
-    rescue
-      case $!
-      when URI::InvalidURIError then raise BadRequest
-      when Errno::EACCES then raise Forbidden
-      when Errno::ENOENT then raise Conflict
-      when Errno::EEXIST then raise Conflict      
-      when Errno::ENOSPC then raise InsufficientStorage
-      else
-        raise
       end
     end
-  
+    def copy(destination, depth = Infinity)
+      around :copy do
+        destination.delete if destination.exist?
+
+        if not collection?
+          destination.put get
+        else
+          destination.mkcol
+
+          if depth > 0
+            children do |child|
+              basename = child.basename
+              basename << '/' if child.collection?
+              child.copy destination.join(basename), depth - 1
+            end
+          end
+        end
+        destination.properties = properties
+      end
+    end
+    def move(destination, depth = Infinity)
+      around :move do
+        copy destination, depth
+        delete
+      end
+    end
+
+    def to_s
+      uri.to_s
+    end
+
   end
 end

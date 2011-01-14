@@ -3,6 +3,7 @@ GEM
   specs:
     activesupport (3.0.2)
     addressable (2.2.2)
+    builder (3.0.0)
     carrierwave (0.5.0)
       activesupport (~> 3.0.0)
     escape_utils (0.1.9)
@@ -10,6 +11,9 @@ GEM
       addressable (~> 2.2.2)
       multipart-post (~> 1.0.1)
       rack (>= 1.1.0, < 2)
+    hoptoad_notifier (2.4.2)
+      activesupport
+      builder
     mime-types (1.16)
     mini_magick (3.1)
       subexec (~> 0.0.4)
@@ -84,6 +88,7 @@ PLATFORMS
 
 DEPENDENCIES
   carrierwave
+  hoptoad_notifier
   mini_magick
   nokogiri
   omniauth
