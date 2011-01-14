@@ -199,7 +199,11 @@ module DAV
 
       def all
         default = default_properties.map {|p| "<#{p}>#{send(p)}</#{p}>"}.join
-        xml_props.after(Nokogiri::XML::fragment(default)).to_xml unless xml_props.empty?
+        if xml_props.empty?
+          default
+        else
+          xml_props.after(Nokogiri::XML::fragment(default)).to_xml
+        end
       end
 
   end
