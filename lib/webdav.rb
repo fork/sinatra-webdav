@@ -296,8 +296,6 @@ class WebDAV < ::Sinatra::Base
     conflict unless resource.parent.exist?
     resource.put request.body
 
-    #Uploader::Processing.new(resource.path, options.public).process!
-  
     created
   end
 

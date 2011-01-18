@@ -1,5 +1,3 @@
-require "#{ File.dirname __FILE__ }/uploader"
-
 class Put
 
   SUCCESS_MESSAGE = '{"jsonrpc" : "2.0", "result" : null, "id" : "id"}'
@@ -51,8 +49,7 @@ class Put
   protected
 
   def move_to_destination
-    unless FileUtils.mv(@tmp_path, @path, :force => true) and 
-        Uploader::Processing.new(@path, @public_path).process!
+    unless FileUtils.mv(@tmp_path, @path, :force => true)
       remove_tmp_file
       raise FailedMoveFile
     end

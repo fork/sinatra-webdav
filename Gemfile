@@ -5,8 +5,6 @@ gem 'nokogiri'
 gem 'slim'
 
 gem 'omniauth'
-gem 'carrierwave'
-gem 'mini_magick'
 gem 'hoptoad_notifier'
 
 group :test do

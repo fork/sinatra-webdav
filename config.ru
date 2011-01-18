@@ -11,7 +11,6 @@ require "#{ root }/lib/sinatra/templates/slim"
 require "#{ root }/lib/plupload"
 require "#{ root }/lib/dav"
 require "#{ root }/lib/models"
-require "#{ root }/lib/uploader"
 require "#{ root }/lib/verbs"
 
 require "#{ root }/config"
