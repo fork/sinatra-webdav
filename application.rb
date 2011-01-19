@@ -78,7 +78,7 @@ class Application < WebDAV::Base
   end
 
   before {
-    unauthorized unless authorized? or request.path =~ %r'^/auth/cas/callback'
+    redirect '/auth/cas' unless authorized? or request.path =~ %r'^/auth/cas'
   }
 
   # PLUpload
