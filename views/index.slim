@@ -5,32 +5,55 @@ title= title
 
 link rel="stylesheet" href="/css/application.css" type="text/css" media="screen" charset="utf-8"
 
-form id="left" class="column focus"
-  .margin
-    .data
-      table
-        thead
-          tr
-            th.name  Name
-            th.size  Size
-            th.type  Type
-            th.mtime Last Modified
-        tbody
-    ul.breadcrumb
-    #left_uploader.uploader
-      | Your browser doesn't support native upload. Try Firefox 3 or Safari 4.
+body#container
 
-form id="right" class="column"
-  .margin
-    .data
-      table
-        thead
-          tr
-            th.name  Name
-            th.size  Size
-            th.type  Type
-            th.mtime Last Modified
-        tbody
-    ul.breadcrumb
-    #right_uploader.uploader
-      | Your browser doesn't support native upload. Try Firefox 3 or Safari 4.
+  form.column.focus
+    .margin
+      .data
+        table
+          thead
+            tr
+              th.name  Name
+              th.size  Size
+              th.type  Type
+              th.mtime Last Modified
+          tbody
+      select.breadcrumb
+      select.filter multiple="multiple"
+
+  form.column.hidden
+    .margin
+      .data
+        table
+          thead
+            tr
+              th.name  Name
+              th.size  Size
+              th.type  Type
+              th.mtime Last Modified
+          tbody
+      select.breadcrumb
+      select.filter multiple="multiple"
+
+  #uploader
+
+
+script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js" type="text/javascript"
+script src="/js/jquery.cookie.js" type="text/javascript"
+script src="/js/jquery.ba-bbq.min.js" type="text/javascript"
+script src="/js/webdav.js" type="text/javascript"
+script src="/js/controller.js" type="text/javascript"
+script src="/js/application.js" type="text/javascript"
+
+script type="text/javascript"
+  | Controller['text/html'] = function(url) {
+  | var host = location.protocol + '//' + location.host;
+  | var path = url.replace(/https?:\/\//, '');
+  | 
+  | window.location = 'http://vizard.fork.de/' + path + '?path=' + url +
+  | '&origin='      + host +
+  | '&return='      + location.href +
+  | '&handler='     + host + '/application/vizard/handler.js' +
+  | '&vizardcss='   + host + '/application/vizard/styles.css' +
+  | '&cktemplates=' + host + '/application/vizard/templates.js';
+  | };
