@@ -1,16 +1,16 @@
 (function(provides, $) {
-	function authenticate() { window.location = '/auth/cas'; }
 	provides.WebDAV = {
 		PROPFIND: function(uri, callback, depth) {
 			if (typeof(depth) == 'undefined') depth = 1;
 
 			$.ajax({
-				beforeSend: function(r) { r.setRequestHeader('DEPTH', depth); },
+				beforeSend: function(r) {
+					r.setRequestHeader('DEPTH', depth);
+				},
 				complete: function(request, status) {
 					if (status == 'success') {
 						callback.call(this, request.responseXML);
 					}
-					if (request.status == 401) { authenticate(); }
 				},
 				dataType: 'text/xml',
 				type: 'PROPFIND',
@@ -19,59 +19,67 @@
 		},
 		GET: function(url, callback) {
 			$.ajax({
-				// error: func...
-				success: callback,
-				error: function(req) {
-					if(req.status == 401) window.location = '/auth/cas';
+				complete: function(request, status) {
+					if (status == 'success') {
+						callback.call(this, request.responseXML);
+					}
 				},
 				url: url
 			});
 		},
 		MKCOL: function(url, callback) {
 			$.ajax({
-				success: callback,
-				error: function(req) {
-					if(req.status == 401) window.location = '/auth/cas';
+				complete: function(request, status) {
+					if (status == 'success') {
+						callback.call(this, request.responseXML);
+					}
 				},
 				type: 'MKCOL',
 				url: url
 			});
 		},
-		MOVE: function(url, dest, callback) {
-			$.ajax({
-				success: callback,
-				error: function(req) {
-					if(req.status == 401) window.location = '/auth/cas';
-				},
-				type: 'MOVE',
-				beforeSend: function(req) {
-					req.setRequestHeader("DESTINATION", dest);
-					req.setRequestHeader("OVERWRITE", 'T');
-				},
-				url: url
-			});
-		},
-		COPY: function(url, dest, callback) {
-			$.ajax({
-				success: callback,
-				error: function(req) {
-					if(req.status == 401) window.location = '/auth/cas';
-				},
-				type: 'COPY',
-				beforeSend: function(req) {
-					req.setRequestHeader("DESTINATION", dest);
-					req.setRequestHeader("OVERWRITE", 'T');
-				},
-				url: url
-			});
-		},
 		DELETE: function(url, callback) {
 			$.ajax({
-				success: callback,
-				error: function(req) {
-					if(req.status == 401) window.location = '/auth/cas';
+				complete: function(request, status) {
+					if (status == 'success') {
+						callback.call(this, request.responseXML);
+					}
 				},
 				type: 'DELETE',
+				url: url
+			});
+		},
+		COPY: function(url, destination, callback, overwrite) {
+			if (typeof(overwrite) == 'undefined') overwrite = 'T';
+
+			$.ajax({
+				beforeSend: function(req) {
+					req.setRequestHeader("DESTINATION", destination);
+					req.setRequestHeader("OVERWRITE", overwrite);
+				},
+				complete: function(request, status) {
+					if (status == 'success') {
+						callback.call(this, request.responseXML);
+					}
+				},
+				type: 'COPY',
+				url: url
+			});
+		},
+		MOVE: function(url, destination, callback, overwrite) {
+			if (typeof(overwrite) == 'undefined') overwrite = 'T';
+
+			$.ajax({
+				beforeSend: function(req) {
+					req.setRequestHeader("DESTINATION", destination);
+					req.setRequestHeader("OVERWRITE", overwrite);
+				},
+				complete: function(request, status) {
+					if (status == 'success') {
+						callback.call(this, request.responseXML);
+					}
+				},
+				type: 'MOVE',
 				url: url
 			});
 		}
