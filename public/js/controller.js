@@ -22,26 +22,10 @@
 	Controller['application/octet-stream'] = function(url) {
 		window.open(url);
 	};
-	Controller['text/html'] = function(url) {
-		var host = location.protocol + '//' + location.host;
-		var path = url.replace(/https?:\/\//, '');
-
-		window.location = 'http://vizard.fork.de/' + path + '?path=' + url +
-			'&origin='      + host +
-			'&return='      + location.href +
-			'&handler='     + host + '/application/vizard/handler.js' +
-			'&vizardcss='   + host + '/application/vizard/styles.css' +
-			'&cktemplates=' + host + '/application/vizard/templates.js';
-	};
 	Controller.defaultType = 'application/octet-stream';
 
 	Controller['directory'] = function(url) {
-		var $$ = $(this);
-		WebDAV.PROPFIND(url, function(multistatus) {
-			$$.data('resources', $('response:gt(0)', multistatus).map(Resource));
-			$$.data('href', url);
-			$$.trigger('webdav.directory');
-		});
+		$.bbq.pushState({ url: url });
 	};
 
 	provides.Resource = Resource;
