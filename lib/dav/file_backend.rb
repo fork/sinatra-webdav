@@ -24,7 +24,7 @@ module DAV
     end
 
     def path
-      File.join "#{ resource.root }#{ uri.path }".split('/')
+      File.join "#{ resource.root }#{ URI.unescape uri.path }".split('/')
     end
 
     def collection?

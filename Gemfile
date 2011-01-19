@@ -6,6 +6,7 @@ gem 'nokogiri'
 group :example do
   gem 'omniauth'
   gem 'hoptoad_notifier'
+  gem 'slim'
 end
 
 group :test do

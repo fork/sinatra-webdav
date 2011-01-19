@@ -3,12 +3,34 @@
 meta charset="utf-8"
 title= title
 
-table
-  tbody.data
-    - list.each do |(path, name, size, type, mtime)|
-      tr
-        td.name
-          a.path href="#{ path }" = name
-        td.size = size
-        td.type = type
-        td.mtime = mtime.httpdate
+link rel="stylesheet" href="/css/application.css" type="text/css" media="screen" charset="utf-8"
+
+form id="left" class="column focus"
+  .margin
+    .data
+      table
+        thead
+          tr
+            th.name  Name
+            th.size  Size
+            th.type  Type
+            th.mtime Last Modified
+        tbody
+    ul.breadcrumb
+    #left_uploader.uploader
+      | Your browser doesn't support native upload. Try Firefox 3 or Safari 4.
+
+form id="right" class="column"
+  .margin
+    .data
+      table
+        thead
+          tr
+            th.name  Name
+            th.size  Size
+            th.type  Type
+            th.mtime Last Modified
+        tbody
+    ul.breadcrumb
+    #right_uploader.uploader
+      | Your browser doesn't support native upload. Try Firefox 3 or Safari 4.

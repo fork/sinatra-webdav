@@ -2,6 +2,8 @@ root = File.dirname __FILE__
 
 Bundler.require :example
 
+require "#{ root }/lib/sinatra/templates/slim"
+
 require "#{ root }/lib/plupload"
 PLUpload.temp = File.join root, '/tmp'
 
@@ -35,6 +37,8 @@ end
 
 class Application < WebDAV::Base
 
+  set :views, "#{ File.dirname __FILE__ }/views"
+
   # Server Side Includes
   mime_type :include, 'text/html'
 
@@ -58,6 +62,17 @@ class Application < WebDAV::Base
   get '/logout' do
     session.delete :user
     redirect '/'
+  end
+
+  get '*' do
+    not_found unless resource.exist?
+
+    if resource.basename == '/'
+      slim :index, :locals => { :title => 'WebDAV' }
+    else
+      # TODO remember path
+      redirect '/'
+    end
   end
 
   before {

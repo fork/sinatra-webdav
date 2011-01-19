@@ -98,7 +98,7 @@ class WebDAV::Base < ::Sinatra::Base
 
   get '*' do
     pass unless resource.exist?
-    not_allowed if resource.collection?
+    pass if resource.collection?
 
     content_type resource.type
     body resource.get
