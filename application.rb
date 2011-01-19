@@ -70,8 +70,10 @@ class Application < WebDAV::Base
     if resource.basename == '/'
       slim :index, :locals => { :title => 'WebDAV' }
     else
-      # TODO remember path
-      redirect '/'
+      url = request.path
+      url << '/' unless url =~ /\/$/
+
+      redirect "/#url=#{ url }"
     end
   end
 
