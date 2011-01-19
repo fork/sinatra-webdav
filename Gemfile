@@ -2,10 +2,11 @@ source 'http://rubygems.org'
 
 gem 'sinatra', :require => 'sinatra/base'
 gem 'nokogiri'
-gem 'slim'
 
-gem 'omniauth'
-gem 'hoptoad_notifier'
+group :example do
+  gem 'omniauth'
+  gem 'hoptoad_notifier'
+end
 
 group :test do
   gem 'rack-test', :require => 'rack/test'

@@ -1,12 +1,16 @@
 (function(provides, $) {
+	function authenticate() { window.location = '/auth/cas'; }
 	provides.WebDAV = {
 		PROPFIND: function(uri, callback, depth) {
 			if (typeof(depth) == 'undefined') depth = 1;
 
 			$.ajax({
 				beforeSend: function(r) { r.setRequestHeader('DEPTH', depth); },
-				complete: function(request, st) {
-					if (st == 'success') callback.call(this, request.responseXML);
+				complete: function(request, status) {
+					if (status == 'success') {
+						callback.call(this, request.responseXML);
+					}
+					if (request.status == 401) { authenticate(); }
 				},
 				dataType: 'text/xml',
 				type: 'PROPFIND',

@@ -1,5 +1,6 @@
 module DAV
   class Properties < Struct.new(:document, :path, :resource)
+    # FIXME this must be configured by Application
     ROOT = File.join Dir.getwd, 'properties', 'group_files'
     
     def self.XML(resource)

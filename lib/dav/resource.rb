@@ -7,9 +7,10 @@ module DAV
         $stderr.puts "#{ method } #{ resource }"
       end
     end
-    #%w[ get put mkcol delete copy move ].each do |method|
-    #  before method.to_sym, '*', LogMethod.new(method.upcase)
-    #end
+
+    %w[ get put mkcol delete copy move ].each do |method|
+      before method.to_sym, '*', LogMethod.new(method.upcase)
+    end
 
     extend Module.new { attr_reader :backend }
 
@@ -72,7 +73,7 @@ module DAV
       resource.new uri.merge(path)
     end
     def parent
-      @parent ||= join "#{ File.dirname uri.path }/"
+      @parent ||= join "#{ File.dirname uri.path }/".sub('//', '/')
     end
     def basename
       File.basename uri.path

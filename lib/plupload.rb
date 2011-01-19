@@ -1,66 +1,72 @@
-class Put
+class PLUpload < Struct.new(:name, :chunks, :index, :source)
 
-  SUCCESS_MESSAGE = '{"jsonrpc" : "2.0", "result" : null, "id" : "id"}'
-  FAILED_OPEN_TMP_ERROR = '{"jsonrpc" : "2.0", "error" : {"code": 100, "message": "Failed to open temp directory."}, "id" : "id"}'
-  FAILED_MOVE_FILE_ERROR = '{"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}'
-  FAILED_OPEN_ERROR = '{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input or output stream."}, "id" : "id"}'
+  Success = Class.new(String) { def ok?; true end }
+  SUCCEEDED = Success.new '{"jsonrpc" : "2.0", "result" : null, "id" : "id"}'
 
-  def initialize(params, sinatra)
-    @chunk = params['chunk'].to_i
-    @chunks = params['chunks'].to_i
+  Failure = Class.new(String) { def ok?; false end }
+  FAILED = Failure.new '{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input or output stream."}, "id" : "id"}'
 
-    @tempfile = params[:file][:tempfile]
-    @tmp_dir = File.join sinatra.root, 'tmp', 'plupload'
-    @tmp_path = File.join @tmp_dir, params['name'].to_s.gsub(/[^\w\._]+/, '')
-    #fixes chrome generating strange blob... filename
-    filename = File.basename params[:splat].first
-    purged_filename = filename.gsub(/[^\w\._]+/, '')
-    destination_dir = File.dirname params[:splat].first
-    @public_path = sinatra.public
-    @path = File.join @public_path, destination_dir, purged_filename
+  NOR_A_WORD_CHARACTER_NEITHER_A_DOT = /[^\w\.]+/
 
-    append = params[:chunks] && Integer(params[:chunk]) > 0
-    @mode = append ? 'a' : ::File::TRUNC | ::File::WRONLY | ::File::CREAT
+  @@temp = File.join Dir.getwd, 'tmp'
+  def self.temp=(temp)
+    @@temp = temp
+  end
+  def self.temp(temp)
+    @@temp
+  end
+
+  def self.process(params)
+    name   = params['name']
+    index  = params['chunk'].to_i
+    chunks = params['chunks'].to_i
+    source = params[:file][:tempfile]
+
+    instance = new name, chunks, index, source
+    instance.process { |io| yield io }
+
+    return SUCCEEDED
+  rescue => e
+    $stderr.puts e, e.backtrace
+    return FAILED
   end
 
   def process
-    unless tmp_dir?
-      return [false, FAILED_OPEN_TMP_ERROR]
-    else
-      File.open(@tmp_path, @mode) do |file|
-        while iochunk = @tempfile.read(1024**2)
-          file.write iochunk
-        end
+    tempfile do |io|
+      blocksize = io.stat.blksize
+      blocksize = 4096 unless blocksize and blocksize > 0
+      while data = source.read(blocksize)
+        io << data
       end
     end
-    # copy tmp file to destination and remove tmp file if it was the last chunk or file was transferred without using chunks
-    if @chunk == @chunks || (@chunks > 0 && @chunk == (@chunks - 1))
-      move_to_destination
-    end
-    [true, SUCCESS_MESSAGE]
-  rescue FailedMoveFile
-    [false, FAILED_MOVE_FILE_ERROR]
-  rescue IOError
-    [false, FAILED_OPEN_ERROR]
-  end
 
-  class FailedMoveFile < Exception; end
+    if not chunked? or finished?
+      tempfile('r') { |io| yield io }
+      FileUtils.rm path rescue nil
+    end
+  end
 
   protected
 
-  def move_to_destination
-    unless FileUtils.mv(@tmp_path, @path, :force => true)
-      remove_tmp_file
-      raise FailedMoveFile
+    def finished?
+      chunks - index == 1
     end
-  end
+    def chunked?
+      chunks > 0
+    end
+    def mode
+      return 'a' if chunked?
+      File::TRUNC | File::WRONLY | File::CREAT
+    end
 
-  def remove_tmp_file
-    FileUtils.rm @tmp_path rescue nil
-  end
+    # Returns path with normalized filename
+    def path
+      File.join @@temp, name.gsub(NOR_A_WORD_CHARACTER_NEITHER_A_DOT, '')
+    end
 
-  def tmp_dir?
-    FileUtils.mkpath(@tmp_dir) && File.directory?(@tmp_dir)
-  end
+    def tempfile(mode = mode)
+      FileUtils.mkpath @@temp unless File.directory? @@temp
+      File.open(path, mode) { |io| yield io }
+    end
 
 end

@@ -8,4 +8,3 @@ end
 require "#{ File.dirname __FILE__ }/dav/event_handling"
 require "#{ File.dirname __FILE__ }/dav/resource"
 require "#{ File.dirname __FILE__ }/dav/properties"
-require "#{ File.dirname __FILE__ }/dav/http_status"

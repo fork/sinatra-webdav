@@ -1,4 +1,4 @@
-module Verbs
+module WebDAV::Verbs
   def mkcol(path, opts={}, &bk)     route 'MKCOL',     path, opts, &bk end
   def copy(path, opts={}, &bk)      route 'COPY',      path, opts, &bk end
   def move(path, opts={}, &bk)      route 'MOVE',      path, opts, &bk end
