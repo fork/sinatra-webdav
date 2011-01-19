@@ -43,7 +43,7 @@ module DAV
 
           name << '/' if File.directory? File.join(path, name)
 
-          instance = join name
+          instance = join URI.escape(name)
           yield instance if block_given?
           collection << instance
         end
