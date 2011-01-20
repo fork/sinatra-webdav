@@ -130,6 +130,8 @@ jQuery(function($) {
 		column.data('sortByAttribute', utils.Sorter('basename'));
 	});
 
+	$('thead').mousedown(function(e) { e.preventDefault(); });
+
 	$('.breadcrumb').change(function() {
 		var url = $(this).val();
 		$.bbq.pushState({ url: url });
@@ -138,14 +140,13 @@ jQuery(function($) {
 	$('.typeSelect').each(function() {
 		var $$ = $(this);
 
+		$(document).click(function() { $$.removeClass('active'); });
+
 		var label = $$.find('label').
 		click(function(e) {
 			var active = $$.hasClass('active');
 			if (active) return;
 
-			$(document).one('click', function() {
-				$$.removeClass('active');
-			});
 			$$.addClass('active');
 			select.focus();
 
@@ -233,9 +234,11 @@ jQuery(function($) {
 		column.find('.breadcrumb').html(disabled);
 
 		WebDAV.PROPFIND(url, function(multistatus) {
-			var resources = $('response', multistatus).map(WebDAV.Resource);
-			// reset __proto__ since map returns an object
-			resources.__proto__ = [];
+			var resources = [];
+			$('response', multistatus).each(function() {
+				var resource = WebDAV.Resource.call(this);
+				resources.push(resource);
+			});
 			column.data('resources', resources).trigger('expire');
 		});
 	});
