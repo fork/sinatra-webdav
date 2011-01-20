@@ -145,7 +145,8 @@ module DAV
         '<collection/>' if collection?
       end
       def getcontenttype
-        collection?? "text/html" : Rack::Mime.mime_type(File.extname(resource.path))
+        return 'directory/directory' if collection?
+        Rack::Mime.mime_type File.extname(resource.path)
       end
       def getcontentlength
         stat.size

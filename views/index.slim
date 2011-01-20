@@ -14,13 +14,13 @@ body#container
           thead
             tr
               th.name  Name
+              th.mtime Last Modified
               th.size  Size
               th.type  Type
-              th.mtime Last Modified
           tbody
       select.breadcrumb
       .typeSelect
-        label Unfiltered
+        label Showing: All Files
         select multiple="multiple"
 
   form.column.hidden
@@ -30,21 +30,21 @@ body#container
           thead
             tr
               th.name  Name
+              th.mtime Last Modified
               th.size  Size
               th.type  Type
-              th.mtime Last Modified
           tbody
       select.breadcrumb
       .typeSelect
-        label Unfiltered
+        label Showing: All Files
         select multiple="multiple"
 
   #uploader
 
 
 script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js" type="text/javascript"
-script src="/js/jquery.cookie.js" type="text/javascript"
 script src="/js/jquery.ba-bbq.min.js" type="text/javascript"
-script src="/js/webdav.js" type="text/javascript"
 script src="/js/controller.js" type="text/javascript"
+script src="/js/webdav.js" type="text/javascript"
+script src="/js/utils.js" type="text/javascript"
 script src="/js/application.js" type="text/javascript"

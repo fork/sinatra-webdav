@@ -1,4 +1,6 @@
-(function(provides, $) {
+(function($) {
+	var exports = this;
+
 	function Resource() {
 		var resource = {};
 		resource.href = $('href', this).text();
@@ -16,7 +18,7 @@
 		return resource;
 	}
 
-	provides.WebDAV = {
+	exports.WebDAV = {
 		Resource: Resource,
 		PROPFIND: function(uri, callback, depth) {
 			if (typeof(depth) == 'undefined') depth = 1;
@@ -102,4 +104,4 @@
 			});
 		}
 	};
-})(window, jQuery);
+})(jQuery);

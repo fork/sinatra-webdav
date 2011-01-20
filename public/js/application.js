@@ -31,10 +31,14 @@ jQuery(function($) {
 		options.push(Option('/'));
 		$.each(dirnames, function(i) {
 			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/';
-			options.unshift(Option(this.toString() + '/', path));
+			options.unshift(Option(unescape(this) + '/', path));
 		});
 
 		return options;
+	}
+	var bytesizeFormatter = utils.Formatter.SI('B');
+	function timeFormatter(date) {
+		return utils.relativeTime.call(date, 100);
 	}
 	function rowsForListing(resources) {
 		var rows = [];
@@ -44,11 +48,9 @@ jQuery(function($) {
 			var row    = Row(this.contentType.split('/').join(' ')).
 			append(
 				Column(anchor, 'name'),
-				//column.clone().text(bytesizeFormatter(this.contentLength)),
-				Column(this.contentLength, 'size'),
-				Column(this.contentType, 'type'),
-				//column.clone().text(timeFormatter(this.lastModified))
-				Column(this.lastModified.toString(), 'mtime')
+				Column(timeFormatter(this.lastModified), 'mtime'),
+				Column(bytesizeFormatter(this.contentLength), 'size'),
+				Column(this.contentType, 'type')
 			);
 			if (this.basename.slice(0, 1) == '.') row.addClass('dotfile');
 
@@ -105,6 +107,7 @@ jQuery(function($) {
 		$.each(optionsForTypeSelect(resources), function() {
 			select.append(this);
 		});
+		select.change();
 
 		breadcrumb = this.find('.breadcrumb').empty();
 		$.each(optionsForBreadcrumb(root.href), function() {
@@ -112,14 +115,19 @@ jQuery(function($) {
 		});
 	}
 
-	$('.column').bind('expire', function(e) {
+	$('.column').
+	bind('expire', function(e) {
 		var column    = $(this);
 		var resources = column.data('resources');
 		var root      = resources.shift();
 
-		//resources.sort(this.data('sortByAttribute'));
+		resources.sort(column.data('sortByAttribute'));
 
 		refresh.call(column, root, resources);
+	}).
+	each(function() {
+		var column = $(this);
+		column.data('sortByAttribute', utils.Sorter('basename'));
 	});
 
 	$('.breadcrumb').change(function() {
@@ -127,50 +135,82 @@ jQuery(function($) {
 		$.bbq.pushState({ url: url });
 	});
 
-	$('.typeSelect').click(function(e) {
+	$('.typeSelect').each(function() {
 		var $$ = $(this);
-		if (e.target.tagName == 'OPTGROUP') {
-			var values = [];
 
-			$('option', e.target).each(function() {
-				var option = $(this);
-				values.push(option.attr('value') || option.text());
+		var label = $$.find('label').
+		click(function(e) {
+			var active = $$.hasClass('active');
+			if (active) return;
+
+			$(document).one('click', function() {
+				$$.removeClass('active');
 			});
-
-			if (e.metaKey) {
-				var selected_values = $$.find('select').val();
-				var value = selected_values.pop();
-				while (value) {
-					var index = values.indexOf(value);
-
-					if (index > -1) { values.splice(index, 1); }
-					else { values.push(value); }
-
-					value = selected_values.pop();
-				}
-			}
-
-			$$.find('select').val(values);
-		} else if (e.target.tagName != 'OPTION') {
-			$(document).one('click', function() { $$.removeClass('active'); });
 			$$.addClass('active');
+			select.focus();
+
 			e.stopPropagation();
-		}
-	}).find('select').change(function() {
-		var $$    = $(this);
-		var tbody = $$.siblings('.data').find('tbody');
+		}).
+		mousedown(function(e) { e.preventDefault(); });
 
-		tbody.children().removeClass('choosen');
+		var select = $$.find('select').
+		change(function() {
+			var tbody = $$.parent().find('tbody'), selector;
 
-		var types = $$.val();
-		if (types === null) return;
+			tbody.children().addClass('hidden');
 
-		selector = $.map(types, function(v) { return '.' + v; }).join(', ');
-		tbody.children(selector).addClass('choosen');
+			var types = select.val();
+			if (types === null) return;
+
+			selector = $.map(types, function(type) {
+				return '.' + type;
+			}).join(', ');
+			tbody.children(selector).removeClass('hidden');
+
+			if (tbody.children('.hidden').length > 0) {
+				label.text('Showing: Some Files');
+			} else {
+				label.text('Showing: All Files');
+			}
+		}).
+		click(function(e) {
+			if (e.target.tagName === 'OPTGROUP') {
+				var values = [];
+
+				$('option', e.target).each(function() {
+					var option = $(this);
+					values.push(option.attr('value') || option.text());
+				});
+
+				if (e.metaKey) {
+					var selected_values = select.val();
+					var value = selected_values.pop();
+					while (value) {
+						var index = values.indexOf(value);
+
+						if (index > -1) { values.splice(index, 1); }
+						else { values.push(value); }
+
+						value = selected_values.pop();
+					}
+				}
+
+				select.val(values);
+				select.change();
+			}
+			e.stopPropagation();
+		});
 	});
 
+	// Set controller actions
 	Controller['directory'] = function(url) {
 		$.bbq.pushState({ url: url });
+	};
+	Controller['application/octet-stream'] = function(url) {
+		// we can apply pattern matching here
+		// if (/.include$/.test(url)) ...
+
+		window.open(url);
 	};
 	Controller['text/html'] = function(url) {
 		var host = location.protocol + '//' + location.host;
@@ -184,6 +224,7 @@ jQuery(function($) {
 		'&cktemplates=' + host + '/application/vizard/templates.js';
 	};
 
+	// Load resources on hashchange
 	var disabled = '<option disabled="disabled">Loading...</option>';
 	$(window).bind('hashchange', function(e) {
 		var column = $('.focus');
@@ -193,6 +234,7 @@ jQuery(function($) {
 
 		WebDAV.PROPFIND(url, function(multistatus) {
 			var resources = $('response', multistatus).map(WebDAV.Resource);
+			// reset __proto__ since map returns an object
 			resources.__proto__ = [];
 			column.data('resources', resources).trigger('expire');
 		});

@@ -1,5 +1,5 @@
 (function() {
-	var provides = this;
+	var exports = this;
 
 	function Controller(type) {
 		return Controller[type] || Controller[Controller.defaultType];
@@ -9,5 +9,5 @@
 	};
 	Controller.defaultType = 'application/octet-stream';
 
-	provides.Controller = Controller;
+	exports.Controller = Controller;
 })();

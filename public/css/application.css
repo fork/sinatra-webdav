@@ -3,7 +3,7 @@ a {
 	text-decoration: none;
 }
 body {
-	font-family: sans-serif;
+	font-family: Helvetica, sans-serif;
 	font-size: 12px;
 	margin: 0;
 }
@@ -35,13 +35,18 @@ body {
 	border-left: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
 	bottom: 0;
-	top: 5px;
-	padding-top: 22px;
+	top: 0;
 	position: absolute;
 }
 
 .breadcrumb {
+	outline: 0;
+	border: none;
+	-webkit-appearance: none;
+	border-radius: 0;
 	letter-spacing: 1px;
+	padding: 3px 4px;
+	margin: 0;
 	position: absolute;
 	top: 0;
 }
@@ -54,15 +59,17 @@ body {
 }
 
 .typeSelect {
+	background-color: ghostwhite;
 	position: absolute;
 	letter-spacing: 1px;
 	top: 0;
 	right: 0;
-	padding: 4px;
+	padding: 3px 4px;
+	width: 200px;
 }
-.typeSelect select,
-.typeSelect.active label {
+.typeSelect select {
 	display: none;
+	width: 100%;
 }
 .typeSelect.active select {
 	display: block;
@@ -73,7 +80,7 @@ body {
 	bottom: 0;
 	left: 0;
 	right: 0;
-	top: 25px;
+	top: 20px;
 	overflow-y: scroll;
 	position: absolute;
 }
@@ -102,7 +109,7 @@ tr:hover td {
 .name {
 	text-align: left;
 	padding-left: 8px;
-	min-width: 35%;
+	min-width: 55%;
 }
 .size, .type {
 	text-align: right;
@@ -114,8 +121,8 @@ tr:hover td {
 	width: 25%;
 }
 .mtime {
-	width: 30%;
-	text-align: center;
+	width: 10%;
+	text-align: right;
 }
 #divider {
 	margin: auto;
