@@ -2,6 +2,7 @@ root = File.dirname __FILE__
 
 Bundler.require :example
 
+# RADAR remove this when sinatra natively supports the slim method
 require "#{ root }/lib/sinatra/templates/slim"
 
 require "#{ root }/lib/plupload"
@@ -14,6 +15,7 @@ HoptoadNotifier.configure do |config|
   config.api_key = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 end
 
+# RADAR remove this monkey-patch when we have a valid SSL certificate
 class OmniAuth::Strategies::CAS::ServiceTicketValidator
   def get_service_response_body
     result = ''
@@ -22,7 +24,7 @@ class OmniAuth::Strategies::CAS::ServiceTicketValidator
 
     # MONKEY-PATCH BEGIN
 
-    # Until we have an official certificate
+    # ... until we have an official certificate
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
     # MONKEY-PATCH END
@@ -37,16 +39,14 @@ end
 
 class Application < WebDAV::Base
 
-  set :views, "#{ File.dirname __FILE__ }/views"
-
-  # Server Side Includes
-  mime_type :include, 'text/html'
-
+  # Exception Handling
   configure :production do
-    # Exception Handling
     use HoptoadNotifier::Rack
     get('/hoptoad') { raise 'Bam!' }
   end
+
+  # Server Side Includes
+  mime_type :include, 'text/html'
 
   # Authentication
   use OmniAuth::Strategies::CAS,
@@ -64,16 +64,9 @@ class Application < WebDAV::Base
     redirect '/'
   end
 
-  get '*' do
-    not_found unless resource.exist?
-
-    if resource.basename == '/'
-      slim :index, :locals => { :title => 'WebDAV' }
-    else
-      url = request.path
-      url << '/' unless url =~ /\/$/
-
-      redirect "/#url=#{ url }"
+  helpers do
+    def authorized?
+      session.member? :user
     end
   end
 
@@ -81,13 +74,7 @@ class Application < WebDAV::Base
     redirect '/auth/cas' unless authorized? or request.path =~ %r'^/auth/cas'
   }
 
-  # PLUpload
-  helpers do
-    def authorized?
-      session.member? :user
-    end
-  end
-
+  # support PLUploads...
   post '*' do
     conflict unless resource.parent.exist?
 
@@ -100,6 +87,26 @@ class Application < WebDAV::Base
     conflict response unless response.ok?
 
     created response
+  end
+
+  # Deliver JavaScript client...
+  set :views, "#{ File.dirname __FILE__ }/views"
+  get '*' do
+    not_found unless resource.exist?
+
+    unless resource.collection?
+      content_type resource.type
+      body resource.get
+    else
+      if resource.basename == '/'
+        slim :index, :locals => { :title => 'WebDAV' }
+      else 
+        url = request.path
+        url << '/' unless url =~ /\/$/
+
+        redirect "/#url=#{ url }"
+      end
+    end
   end
 
 end
