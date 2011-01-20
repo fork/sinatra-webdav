@@ -35,7 +35,7 @@ class WebDAV::Base < ::Sinatra::Base
   end
 
   move '*' do
-    pass unless resource.exist?
+    not_found unless resource.exist?
     conflict unless destination.parent.exist?
 
     exists = destination.exist?
@@ -47,7 +47,7 @@ class WebDAV::Base < ::Sinatra::Base
   end
 
   copy '*' do
-    pass unless resource.exist?
+    not_found unless resource.exist?
     conflict unless destination.parent.exist?
 
     exists = destination.exist?
@@ -59,7 +59,7 @@ class WebDAV::Base < ::Sinatra::Base
   end
 
   propfind '*' do
-    pass unless resource.exist?
+    not_found unless resource.exist?
 
     xml = Nokogiri::XML request.body.read
     bad_request unless xml.errors.empty?
@@ -71,7 +71,7 @@ class WebDAV::Base < ::Sinatra::Base
   end
 
   proppatch '*' do
-    pass unless resource.exist?
+    not_found unless resource.exist?
 
     xml = Nokogiri::XML request.body.read
     bad_request unless xml.errors.empty?
@@ -90,15 +90,19 @@ class WebDAV::Base < ::Sinatra::Base
   end
 
   delete '*' do
-    pass unless resource.exist?
+    not_found unless resource.exist?
     resource.delete
 
     ok
   end
 
+  # TODO implement LOCK/UNLOCK methods
+  route('LOCK', '*') { ok }
+  route('UNLOCK', '*') { no_content }
+
   get '*' do
-    pass unless resource.exist?
-    pass if resource.collection?
+    not_found unless resource.exist?
+    bad_request if resource.collection?
 
     content_type resource.type
     body resource.get
