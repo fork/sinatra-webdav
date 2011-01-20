@@ -53,13 +53,19 @@ body {
 	display: list-item;
 }
 
-.filter {
-	letter-spacing: 1px;
+.typeSelect {
 	position: absolute;
+	letter-spacing: 1px;
 	top: 0;
 	right: 0;
-	overflow: hidden;
-	height: 1em;
+	padding: 4px;
+}
+.typeSelect select,
+.typeSelect.active label {
+	display: none;
+}
+.typeSelect.active select {
+	display: block;
 }
 
 .data {

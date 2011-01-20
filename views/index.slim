@@ -19,7 +19,9 @@ body#container
               th.mtime Last Modified
           tbody
       select.breadcrumb
-      select.filter multiple="multiple"
+      .typeSelect
+        label Unfiltered
+        select multiple="multiple"
 
   form.column.hidden
     .margin
@@ -33,7 +35,9 @@ body#container
               th.mtime Last Modified
           tbody
       select.breadcrumb
-      select.filter multiple="multiple"
+      .typeSelect
+        label Unfiltered
+        select multiple="multiple"
 
   #uploader
 
@@ -44,16 +48,3 @@ script src="/js/jquery.ba-bbq.min.js" type="text/javascript"
 script src="/js/webdav.js" type="text/javascript"
 script src="/js/controller.js" type="text/javascript"
 script src="/js/application.js" type="text/javascript"
-
-script type="text/javascript"
-  | Controller['text/html'] = function(url) {
-  | var host = location.protocol + '//' + location.host;
-  | var path = url.replace(/https?:\/\//, '');
-  | 
-  | window.location = 'http://vizard.fork.de/' + path + '?path=' + url +
-  | '&origin='      + host +
-  | '&return='      + location.href +
-  | '&handler='     + host + '/application/vizard/handler.js' +
-  | '&vizardcss='   + host + '/application/vizard/styles.css' +
-  | '&cktemplates=' + host + '/application/vizard/templates.js';
-  | };
