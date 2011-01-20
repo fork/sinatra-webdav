@@ -10,6 +10,8 @@
 		resource.basename = names[offset];
 		resource.basename = decodeURI(resource.basename);
 
+		resource.toString = function() { return this.basename; };
+
 		var p = $('prop', this);
 		resource.contentType   = p.find('getcontenttype').text();
 		resource.contentLength = p.find('getcontentlength').text() * 1;
