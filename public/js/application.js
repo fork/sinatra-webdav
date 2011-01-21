@@ -45,8 +45,9 @@ jQuery(function($) {
 
 		$.each(resources, function() {
 			var anchor = $('<A>').text(this.basename).attr('href', this.href);
-			var row    = Row(this.contentType.replace(/\./g, '-').split('/').join(' ')).
-			append(
+			var types  = this.contentType.
+			             replace(/\./g, '-').split('/').join(' ');
+			var row    = Row(types).append(
 				Column(anchor, 'name'),
 				Column(timeFormatter(this.lastModified), 'mtime'),
 				Column(bytesizeFormatter(this.contentLength), 'size'),
@@ -148,7 +149,8 @@ jQuery(function($) {
 		var anchors = column.find('th a');
 		column.find('th').
 		click(function(e) {
-			var anchor = (e.target.tagName === 'a') ? $(e.target) : $('a', this);
+			var anchor = (e.target.tagName === 'a') ?
+			            $(e.target) : $('a', this);
 			var property = anchor.attr('href').slice(1);
 
 			anchors.removeClass('ascending descending');
