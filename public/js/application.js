@@ -178,11 +178,42 @@ jQuery(function($) {
 
 			if (e.metaKey) {
 				row.toggleClass('selected');
-			} else if (e.shiftKey) {
-				// TODO implement range selects
 			} else {
-				rows.removeClass('selected');
-				row.addClass('selected');
+				if (e.shiftKey) {
+					var prev      = row.prevAll('.selected:first');
+					var next      = row.nextAll('.selected:first');
+					var nextDistance;
+					var prevDistance;
+					var $$;
+
+					if (prev.length === 0 && next.length === 0) {
+						if (index > rows.length / 2) {
+							$$ = row.nextAll();
+						} else {
+							$$ = row.prevAll();
+						}
+					} else if (prev.length === 0) {
+						nextDistance = rows.index(next) - index;
+						$$ = next.prevAll(':lt(' + nextDistance + ')');
+					} else if (next.length === 0) {
+						prevDistance = index - rows.index(prev);
+						$$ = prev.nextAll(':lt(' + prevDistance + ')');
+					} else {
+						nextDistance = rows.index(next) - index;
+						prevDistance = index - rows.index(prev);
+
+						if (nextDistance > prevDistance) {
+							$$ = prev.nextAll(':lt(' + prevDistance + ')');
+						} else {
+							$$ = next.prevAll(':lt(' + nextDistance + ')');
+						}
+					}
+
+					$$.addClass('selected');
+				} else {
+					rows.removeClass('selected');
+					row.addClass('selected');
+				}
 			}
 
 			var isAnchor = e.target.tagName === 'A';
