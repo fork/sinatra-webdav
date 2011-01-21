@@ -6,7 +6,7 @@ Bundler.require :example
 require "#{ root }/lib/sinatra/templates/slim"
 
 require "#{ root }/lib/plupload"
-PLUpload.temp = File.join root, '/tmp'
+PLUpload.temp = File.join root, 'tmp'
 
 DAV::Resource.backend = DAV::FileBackend
 DAV::Resource.root = File.join root, 'htdocs'
