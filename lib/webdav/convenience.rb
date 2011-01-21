@@ -14,7 +14,7 @@ module WebDAV::Convenience
     @resource ||= DAV::Resource.new request_uri
   end
   def destination_uri
-    URI request.env['HTTP_DESTINATION']
+    URI URI.escape(request.env['HTTP_DESTINATION'])
   end
   def destination
     @destination ||= resource.join destination_uri
