@@ -1,6 +1,5 @@
 module DAV
   module FileBackend
-    Sendfile = Class.new(File) { alias to_path path }
 
     module ClassMethods
       attr_accessor :root
@@ -12,10 +11,11 @@ module DAV
     end
 
     def open(mode = nil)
+      mode ||= 'r'
       unless block_given?
-        Sendfile.open(path, mode || 'r')
+        Sinatra::Base::StaticFile.open(path, mode)
       else
-        Sendfile.open(path, mode || 'r') { |io| yield io }
+        Sinatra::Base::StaticFile.open(path, mode) { |io| yield io }
       end
     end
 
@@ -43,7 +43,7 @@ module DAV
 
           name << '/' if File.directory? File.join(path, name)
           name = URI.escape name
-          name = URI.escape name, ' :'
+          name = URI.escape name, ' :[]'
 
           instance = join name
           yield instance if block_given?
