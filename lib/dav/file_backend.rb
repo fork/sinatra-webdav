@@ -42,8 +42,10 @@ module DAV
           next if name == '.' or name == '..'
 
           name << '/' if File.directory? File.join(path, name)
+          name = URI.escape name
+          name = URI.escape name, ' :'
 
-          instance = join URI.escape(name)
+          instance = join name
           yield instance if block_given?
           collection << instance
         end
