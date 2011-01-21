@@ -42,6 +42,8 @@ end
 
 class Application < WebDAV::Base
 
+  use Rack::Sendfile
+
   # Exception Handling
   configure :production do
     use HoptoadNotifier::Rack
