@@ -11,6 +11,9 @@ PLUpload.temp = File.join root, 'tmp'
 DAV::Resource.backend = DAV::FileBackend
 DAV::Resource.root = File.join root, 'htdocs'
 
+File.directory? DAV::Resource.root or
+raise 'Resource root needs to be configured!'
+
 HoptoadNotifier.configure do |config|
   config.api_key = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 end
