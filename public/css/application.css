@@ -7,7 +7,7 @@ body {
 	font-size: 12px;
 	margin: 0;
 }
-.hidden { display: none; }
+.hidden, .dotfile { display: none; }
 
 #container {
 	min-width: 480px;
