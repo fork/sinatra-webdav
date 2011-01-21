@@ -10,15 +10,16 @@ body {
 .hidden { display: none; }
 
 #container {
-	min-width: 1280px;
+	min-width: 480px;
 }
 .column {
 	position: absolute;
 	top: 0;
-	bottom: 0;
+	bottom: 1.4em;
 	opacity: 0.75;
 	-moz-opacity: 0.75;
 	filter:alpha(opacity=75);
+	min-width: 480px;
 	width: 100%;
 }
 .focus {
@@ -37,6 +38,21 @@ body {
 	bottom: 0;
 	top: 0;
 	position: absolute;
+}
+
+#log {
+	background-color: white;
+	font-family: Monaco, monospace;
+	position: fixed;
+	bottom: 0;
+	overflow-y: scroll;
+	overflow-x: auto;
+	max-height: 13%;
+	width: 100%;
+}
+#log.minimized {
+	overflow: hidden;
+	height: 1.4em;
 }
 
 .breadcrumb {
@@ -60,7 +76,7 @@ body {
 }
 
 .typeSelect {
-	background-color: ghostwhite;
+	background-color: white;
 	position: absolute;
 	letter-spacing: 1px;
 	top: 0;

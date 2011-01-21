@@ -13,10 +13,14 @@ body#container
         table
           thead
             tr
-              th.name  Name
-              th.mtime Last Modified
-              th.size  Size
-              th.type  Type
+              th.name
+                a.ascending href="#basename" Name
+              th.mtime
+                a href="#lastModified" Last Modified
+              th.size
+                a href="#contentLength" Size
+              th.type
+                a href="#contentType" Type
           tbody
       select.breadcrumb
       .typeSelect
@@ -29,17 +33,21 @@ body#container
         table
           thead
             tr
-              th.name  Name
-              th.mtime Last Modified
-              th.size  Size
-              th.type  Type
+              th.name
+                a.ascending href="#basename" Name
+              th.mtime
+                a href="#lastModified" Last Modified
+              th.size
+                a href="#contentLength" Size
+              th.type
+                a href="#contentType" Type
           tbody
       select.breadcrumb
       .typeSelect
         label Showing: All Files
         select multiple="multiple"
 
-  #uploader
+  #log.minimized
 
 
 script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js" type="text/javascript"

@@ -14,11 +14,11 @@ jQuery(function($) {
 		optGroup.attr('label', label);
 		return optGroup;
 	}
-	var COLUMN = $('<TD>');
+	var COLUMN = $('<td>');
 	function Column(html, type) {
 		return COLUMN.clone().html(html).addClass(type);
 	}
-	var ROW = $('<TR>');
+	var ROW = $('<tr>');
 	function Row(type) {
 		return ROW.clone().addClass(type);
 	}
@@ -45,12 +45,12 @@ jQuery(function($) {
 
 		$.each(resources, function() {
 			var anchor = $('<A>').text(this.basename).attr('href', this.href);
-			var row    = Row(this.contentType.split('/').join(' ')).
+			var row    = Row(this.contentType.replace(/\./g, '-').split('/').join(' ')).
 			append(
 				Column(anchor, 'name'),
 				Column(timeFormatter(this.lastModified), 'mtime'),
 				Column(bytesizeFormatter(this.contentLength), 'size'),
-				Column(this.contentType, 'type')
+				Column(this.contentType.split('/')[0], 'type')
 			);
 			if (this.basename.slice(0, 1) == '.') row.addClass('dotfile');
 
@@ -85,7 +85,7 @@ jQuery(function($) {
 			types[group].sort();
 			var type = types[group].shift();
 			while (typeof type === 'string') {
-				optGroup.append(Option(type, type, true));
+				optGroup.append(Option(type, type.replace(/\./g, '-'), true));
 				type = types[group].shift();
 			}
 			optGroups.push(optGroup);
@@ -97,11 +97,6 @@ jQuery(function($) {
 
 	function refresh(root, resources) {
 		var select, tbody;
-
-		tbody = this.find('.data tbody').empty();
-		$.each(rowsForListing(resources), function() {
-			tbody.append(this);
-		});
 
 		select = this.find('.typeSelect select').empty();
 		$.each(optionsForTypeSelect(resources), function() {
@@ -115,26 +110,94 @@ jQuery(function($) {
 		});
 	}
 
-	$('.column').
-	bind('expire', function(e) {
-		var column    = $(this);
-		var resources = column.data('resources');
-		var root      = resources.shift();
-
-		resources.sort(column.data('sortByAttribute'));
-
-		refresh.call(column, root, resources);
-	}).
-	each(function() {
-		var column = $(this);
-		column.data('sortByAttribute', utils.Sorter('basename'));
-	});
-
-	$('thead').mousedown(function(e) { e.preventDefault(); });
-
 	$('.breadcrumb').change(function() {
 		var url = $(this).val();
 		$.bbq.pushState({ url: url });
+	});
+
+	var columns = $('.column').
+	each(function() {
+		var sorter    = utils.Sorter('basename');
+		var resources = [];
+
+		var column = $(this).
+		bind('sort', function() {
+			resources.sort(sorter);
+			
+			tbody = column.find('tbody').empty();
+			$.each(rowsForListing(resources), function() {
+				tbody.append(this);
+			});
+		}).
+		bind('expire', function(e) {
+			resources = column.data('resources');
+			var root  = resources.shift();
+
+			column.trigger('sort');
+
+			refresh.call(column, root, resources);
+		}).
+		click(function() {
+			var focused = column.is('.focus');
+			if (!focused) {
+				columns.removeClass('focus');
+				column.addClass('focus');
+			}
+		});
+
+		var anchors = column.find('th a');
+		column.find('th').
+		click(function(e) {
+			var anchor = (e.target.tagName === 'a') ? $(e.target) : $('a', this);
+			var property = anchor.attr('href').slice(1);
+
+			anchors.removeClass('ascending descending');
+
+			if (sorter.property == property) {
+				sorter.reverse();
+				anchor.addClass('descending');
+			} else {
+				sorter.ascending();
+				sorter.property = property;
+				anchor.addClass('ascending');
+			}
+
+			column.trigger('sort');
+			e.preventDefault();
+		}).
+		mousedown(function(e) { e.preventDefault(); });
+
+		var tbody = column.find('tbody').
+		click(function(e) {
+			e.preventDefault();
+
+			var rows     = tbody.children('tr');
+			var row      = rows.has(e.target);
+			var index    = rows.index(row);
+			var selected = row.hasClass('selected');
+
+			if (e.metaKey) {
+				row.toggleClass('selected');
+			} else if (e.shiftKey) {
+				// TODO implement range selects
+			} else {
+				rows.removeClass('selected');
+				row.addClass('selected');
+			}
+
+			var isAnchor = e.target.tagName === 'A';
+			if (isAnchor && selected) {
+				var type = resources[index].contentType;
+				Controller(type).apply(column, [e.target.href]);
+			}
+		}).
+		mousedown(function(e) { e.preventDefault(); });
+
+		$('.data').click(function(e) {
+			// support global deselect
+			var tableClicked = $('table', this).has(e.target).length > 0;
+			if (!tableClicked) { tbody.find('tr').removeClass('selected'); }
+		});
 	});
 
 	$('.typeSelect').each(function() {
@@ -242,6 +305,20 @@ jQuery(function($) {
 			column.data('resources', resources).trigger('expire');
 		});
 	});
+
+	var log = $('#log').
+	ajaxSend(function(e, xhr, opts) {
+		var text = '';
+		text += new Date().valueOf();
+		text += [':', opts.type, opts.url].join(' ');
+
+		var line = $('<div>').addClass(opts.type.toLowerCase()).html(text);
+		log.prepend(line);
+	}).
+	dblclick(function() {
+		log.toggleClass('minimized');
+	}).
+	mousedown(function(e) { e.preventDefault(); });
 
 	$(window).trigger('hashchange');
 });

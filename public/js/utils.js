@@ -5,7 +5,7 @@
 	exports.utils = utils;
 
 	function Sorter(property) {
-		var smaller = 1, greater = -1;
+		var smaller = -1, greater = 1;
 
 		function sorter(a, b) {
 			a = a[sorter.property];
