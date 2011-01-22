@@ -6,7 +6,7 @@ class PLUpload < Struct.new(:name, :chunks, :index, :source)
   Failure = Class.new(String) { def ok?; false end }
   FAILED = Failure.new '{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input or output stream."}, "id" : "id"}'
 
-  NOR_A_WORD_CHARACTER_NEITHER_A_DOT = /[^\w\.]+/
+  NEITHER_A_WORD_CHARACTER_NOR_A_DOT = /[^\w\.]+/
 
   @@temp = File.join Dir.getwd, 'tmp'
   def self.temp=(temp)
@@ -61,7 +61,7 @@ class PLUpload < Struct.new(:name, :chunks, :index, :source)
 
     # Returns path with normalized filename
     def path
-      File.join @@temp, name.gsub(NOR_A_WORD_CHARACTER_NEITHER_A_DOT, '')
+      File.join @@temp, name.gsub(NEITHER_A_WORD_CHARACTER_NOR_A_DOT, '')
     end
 
     def tempfile(mode = mode)
