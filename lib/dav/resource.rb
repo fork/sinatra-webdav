@@ -1,5 +1,5 @@
 module DAV
-  class Resource < Struct.new(:uri)
+  class Resource < Struct.new(:uri, :app)
     include EventHandling
 
     class LogMethod < Struct.new(:method)
@@ -55,7 +55,7 @@ module DAV
       collection
     end
     def collection?
-      super
+      uri.path =~ %r'/$'
     end
     def mkcol
       around :mkcol do
@@ -70,7 +70,7 @@ module DAV
     end
 
     def join(path)
-      resource.new uri.merge(path)
+      resource.new uri.merge(path), app
     end
     def parent
       @parent ||= join "#{ File.dirname uri.path }/".sub('//', '/')
@@ -121,6 +121,7 @@ module DAV
             children do |child|
               basename = child.basename
               basename << '/' if child.collection?
+
               child.copy destination.join(basename), depth - 1
             end
           end

@@ -27,9 +27,6 @@ module DAV
       File.join "#{ resource.root }#{ URI.unescape uri.path }".split('/')
     end
 
-    def collection?
-      File.directory? path
-    end
     def exist?
       File.exist? path
     end

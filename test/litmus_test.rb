@@ -34,9 +34,9 @@ enter File.expand_path('..', __FILE__) do |root|
 
   # hit'n'go
   enter litmus do |*|
-    root.join('public').mkdir
+    root.join('htdocs').mkdir
     system 'make', "URL=http://localhost:#{ PORT }/", 'check'
-    root.join('public').rmtree
+    root.join('htdocs').rmtree
   end
 
 end

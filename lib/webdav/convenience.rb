@@ -11,7 +11,7 @@ module WebDAV::Convenience
     URI encode_and_escape(request.url)
   end
   def resource
-    @resource ||= DAV::Resource.new request_uri
+    @resource ||= DAV::Resource.new request_uri, self
   end
   def destination_uri
     URI encode_and_escape(request.env['HTTP_DESTINATION'])
@@ -45,15 +45,9 @@ module WebDAV::Convenience
 
     def encode_and_escape(url)
       url = URI.unescape url unless passenger?
+      url = url.encode 'utf-8', :invalid => :replace, :undef => :replace, :replace => ''
 
-      begin
-        url = url.encode 'utf-8'
-        url = URI.escape url
-      rescue Encoding::UndefinedConversionError => e
-        $stderr.puts e, e.backtrace
-        url = url.encode 'utf-8', :undef => :replace, :replace => ''
-        retry
-      end
+      URI.escape url
     end
 
 end
