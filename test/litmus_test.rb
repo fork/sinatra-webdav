@@ -18,6 +18,9 @@ enter File.expand_path('..', __FILE__) do |root|
   pid_file = root.join 'tmp', 'pids', "passenger.#{ PORT }.pid"
   Process.kill 'HUP', Integer(pid_file.read) if pid_file.exist?
 
+  # create public directory
+  root.join('public').mkdir unless root.join('public').directory?
+
   # deploy litmus
   litmus = root.join 'litmus'
 
