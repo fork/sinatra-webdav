@@ -112,6 +112,7 @@ jQuery(function($) {
 	}
 
 	$('.breadcrumb').change(function() {
+		$(this).parents('.column').click();
 		var url = $(this).val();
 		$.bbq.pushState({ url: url });
 	});
