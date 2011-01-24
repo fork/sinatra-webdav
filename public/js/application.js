@@ -226,12 +226,20 @@ jQuery(function($) {
 				Controller(type).apply(column, [e.target.href]);
 			}
 		}).
-		mousedown(function(e) { e.preventDefault(); });
+		mousedown(function(e) {
+			e.preventDefault();
+		}).
+		rightClick(function(e) {
+			// TODO draw context menu for resource + root resource...
+		});
 
 		$('.data').click(function(e) {
 			// support global deselect
 			var tableClicked = $('table', this).has(e.target).length > 0;
 			if (!tableClicked) { tbody.find('tr').removeClass('selected'); }
+		}).
+		rightClick(function(e) {
+			// TODO draw context menu for root resource...
 		});
 	});
 
