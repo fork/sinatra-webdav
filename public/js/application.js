@@ -120,6 +120,7 @@ jQuery(function($) {
 	each(function() {
 		var sorter    = utils.Sorter('basename');
 		var resources = [];
+		var root;
 
 		var column = $(this).
 		bind('sort', function() {
@@ -132,7 +133,7 @@ jQuery(function($) {
 		}).
 		bind('expire', function(e) {
 			resources = column.data('resources');
-			var root  = resources.shift();
+			root      = resources.shift();
 
 			column.trigger('sort');
 
@@ -297,6 +298,17 @@ jQuery(function($) {
 			}
 			e.stopPropagation();
 		});
+	});
+
+	$('.expander').click(function(e) {
+		var visible = $('#second').toggleClass('hidden').is(':visible');
+		$('.column').toggleClass('half').filter(':visible:last').click();
+
+		if (visible) {
+			$(window).trigger('hashchange');
+		}
+
+		e.stopPropagation();
 	});
 
 	// Set controller actions

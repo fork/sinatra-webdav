@@ -7,7 +7,7 @@ link rel="stylesheet" href="/css/application.css" type="text/css" media="screen"
 
 body#container
 
-  form.column.focus
+  form#first.column.focus
     .margin
       .data
         table
@@ -26,8 +26,12 @@ body#container
       .typeSelect
         label Showing: All Files
         select multiple="multiple"
+      .expander
+        a title="Expand second column."
+          img.hover src="/images/expand-hover.png"
+          img src="/images/expand-normal.png"
 
-  form.column.hidden
+  form#second.column.hidden
     .margin
       .data
         table
@@ -46,6 +50,11 @@ body#container
       .typeSelect
         label Showing: All Files
         select multiple="multiple"
+      .expander
+        a title="Collapse second column."
+          img src="/images/collapse-normal.png"
+          img.hover src="/images/collapse-hover.png"
+
 
   #log.minimized
 

@@ -32,12 +32,50 @@ body {
 	left: 0;
 	right: 0;
 }
+#first {
+	
+}
+#second {
+	left: 50%;
+}
+.half {
+	width: 50%;
+}
 .margin {
 	border-left: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
 	bottom: 0;
 	top: 0;
 	position: absolute;
+}
+
+#first.half .expander {
+	display: none;
+}
+
+#first .expander {
+	position: absolute;
+	right: 0;
+	top: 50%;
+	margin-top: -24px;
+}
+#second .expander {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	margin-top: -24px;
+}
+.expander a {
+	cursor: pointer;
+	width: 24px;
+	height: 48px;
+}
+.expander a img.hover,
+.expander a:hover img {
+	display: none;
+}
+.expander a:hover img.hover {
+	display: block;
 }
 
 #log {
