@@ -274,7 +274,6 @@ jQuery(function($) {
 			return $$;
 		};
 		menu.activate = function activate() {
-			var active = $$.hasClass('active');
 			$$.trigger('activate');
 			// TODO set offset so nothing of context menu is hidden
 			$$.css(position);
@@ -282,7 +281,9 @@ jQuery(function($) {
 			return $$;
 		};
 
-		$(document).click(menu.deactivate);
+		$(document).click(function(e) {
+			if (e.which !== 3) menu.deactivate();
+		});
 
 		return menu;
 	}
