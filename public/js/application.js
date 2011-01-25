@@ -228,19 +228,117 @@ jQuery(function($) {
 		}).
 		mousedown(function(e) {
 			e.preventDefault();
-		}).
-		rightClick(function(e) {
-			// TODO draw context menu for resource + root resource...
 		});
 
-		$('.data').click(function(e) {
+		column.find('.data').click(function(e) {
 			// support global deselect
 			var tableClicked = $('table', this).has(e.target).length > 0;
 			if (!tableClicked) { tbody.find('tr').removeClass('selected'); }
 		}).
 		rightClick(function(e) {
-			// TODO draw context menu for root resource...
+			var rows      = tbody.children().removeClass('active');
+			var row       = rows.has(e.target);
+			var selected  = rows.filter('.selected');
+			var context   = [];
+
+			if (selected.has(e.target).length > 0) {
+				// selected are clicked
+				selected.each(function() {
+					var index = rows.index(this);
+					context.push(resources[index]);
+				}).addClass('active');
+			} else if (row.length > 0) {
+				// another resource was clicked
+				var index = tbody.children().index(row);
+				context.push(resources[index]);
+				row.addClass('active');
+			} else {
+				// empty space was clicked
+				context.push(root);
+			}
+
+			$('#context-menu').data('resources', context).menu('activate').
+			one('deactivate', function() { rows.removeClass('active'); });
 		});
+	});
+
+	var position = { top: 0, left: 0 };
+	$.menu = { position: position };
+
+	$(document).mousemove(function(e) {
+		position.top  = e.clientY;
+		position.left = e.clientX;
+	});
+
+	function Menu($$) {
+		var menu = this;
+
+		menu.deactivate = function deactivate() {
+			$$.trigger('deactivate');
+			$$.removeClass('active');
+			return $$;
+		};
+		menu.activate = function activate() {
+			var active = $$.hasClass('active');
+			$$.trigger('activate');
+			// TODO set offset so nothing of context menu is hidden
+			$$.css(position);
+			$$.addClass('active');
+			return $$;
+		};
+
+		$(document).click(menu.deactivate);
+
+		return menu;
+	}
+
+	$.fn.menu = function menu(handler) {
+		var $$   = this;
+		var menu = $$.data('menu');
+
+		if (typeof menu === 'undefined') {
+			menu = new Menu(this);
+			$$.data('menu', menu);
+		}
+
+		if (typeof handler === 'string') { return menu[handler](); }
+
+		return this.click(function(e) {
+			var self = this;
+			var handling;
+			$.each(handler, function(selector) {
+				handling = $(e.target).is(selector);
+				if (handling) this.call(self, $$.data('resources'));
+				return !handling;
+			});
+			if (!handling) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+		});
+	};
+
+	$('#context-menu').menu({
+		'#get-resource': function(resources) {}, // single resource
+		'#delete': function(resources) {},
+		'#copy': function(resources) {},
+		'#move': function(resources) {},
+		'#make-directory': function(resources) {}, // root
+		'#properties': function(resources) {} // single resource
+	}).bind('activate', function() {
+		var $$ = $(this);
+		var resources = $$.data('resources');
+		var title;
+
+		if (resources.length === 1) {
+			title = resources[0].basename;
+			$$.removeClass('multiple');
+		} else {
+			$$.addClass('multiple');
+			title = 'Resources';
+		}
+
+		$('h3', this).text(title);
 	});
 
 	$('.typeSelect').each(function() {
@@ -290,15 +388,15 @@ jQuery(function($) {
 				});
 
 				if (e.metaKey) {
-					var selected_values = select.val();
-					var value = selected_values.pop();
+					var selectedValues = select.val();
+					var value = selectedValues.pop();
 					while (value) {
 						var index = values.indexOf(value);
 
 						if (index > -1) { values.splice(index, 1); }
 						else { values.push(value); }
 
-						value = selected_values.pop();
+						value = selectedValues.pop();
 					}
 				}
 
@@ -312,6 +410,8 @@ jQuery(function($) {
 	$('.expander').click(function(e) {
 		var visible = $('#second').toggleClass('hidden').is(':visible');
 		$('.column').toggleClass('half').filter(':visible:last').click();
+
+		$('#container').toggleClass('single double');
 
 		if (visible) {
 			$(window).trigger('hashchange');

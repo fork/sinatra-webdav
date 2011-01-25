@@ -3,16 +3,23 @@ a {
 	text-decoration: none;
 }
 body {
+	position: absolute;
 	font-family: Helvetica, sans-serif;
 	font-size: 12px;
 	margin: 0;
+	width: 100%;
+	height: 100%;
 }
 .hidden, .dotfile { display: none; }
 
-#container {
+body.single {
 	min-width: 480px;
 }
+body.double {
+	min-width: 960px;
+}
 .column {
+	background-color: white;
 	position: absolute;
 	top: 0;
 	bottom: 1.4em;
@@ -33,10 +40,10 @@ body {
 	right: 0;
 }
 #first {
-	
+	left: 0;
 }
 #second {
-	left: 50%;
+	right: 0;
 }
 .half {
 	width: 50%;
@@ -49,7 +56,47 @@ body {
 	position: absolute;
 }
 
-#first.half .expander {
+.shadow {
+  -moz-box-shadow: 3px 3px 1px black;
+  -webkit-box-shadow: 3px 3px 1px black;
+  box-shadow: 3px 3px 1px black;
+}
+
+#context-menu {
+	display: none;
+	background-color: white;
+	position: absolute;
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	min-width: 12em;
+}
+#context-menu.active {
+	display: block;
+}
+#context-menu li {
+	width: 100%;
+}
+#context-menu a {
+	cursor: pointer;
+	display: block;
+	padding: 4px;
+}
+#context-menu a:hover {
+	background-color: #ccc;
+}
+#context-menu h3 {
+	margin: 0;
+	padding: 4px;
+	background-color: darkmagenta;
+	color: aliceblue;
+	font-weight: normal;
+	text-align: center;
+	letter-spacing: 1px;
+}
+
+.multiple .resource,
+.multiple .collection {
 	display: none;
 }
 
@@ -70,11 +117,15 @@ body {
 	width: 24px;
 	height: 48px;
 }
-.expander a img.hover,
-.expander a:hover img {
+#first.half .expander {
 	display: none;
 }
-.expander a:hover img.hover {
+
+a img.hover,
+a:hover img {
+	display: none;
+}
+a:hover img.hover {
 	display: block;
 }
 
@@ -109,7 +160,8 @@ body {
 .breadcrumb option {
 	display: none;
 }
-.breadcrumb option.first, .breadcrumb.active option {
+.breadcrumb option.first,
+.breadcrumb.active option {
 	display: list-item;
 }
 
@@ -145,23 +197,31 @@ body {
 table {
 	border-collapse: collapse;
 	width: 100%;
+	cursor: pointer;
 }
 th {
 	background-color: gainsboro;
 	padding: 4px 8px;
 	white-space: nowrap;
-	cursor: pointer;
 }
 td {
 	padding: 2px 8px;
-	border-bottom: 1px solid ghostwhite;
 	white-space: nowrap;
+	letter-spacing: 1px;
 }
-tr:hover td {
-	background-color: lightgrey;
+tbody tr {
+	border-bottom: 1px solid ghostwhite;
 }
-.selected td, .selected:hover td, .selected a {
+tr.active,
+tr.active:hover {
+	background-color: darkorchid;
+}
+tr.selected,
+tr.selected:hover {
 	background-color: dimgray;
+}
+tr.active *,
+tr.selected * {
 	color: white;
 }
 .name {
@@ -208,194 +268,4 @@ tr:hover td {
 }
 .button:hover {
 	background-color: gray;
-}
-
-/* 
-   Plupload
-------------------------------------------------------------------- */
-#uploader {
-	position: absolute;
-	width: 100%;
-	bottom: 0;
-}
-
-.plupload_shadow {
-	height: 8px;
-	background: url('/images/shadow_top.png') repeat-x;
-}
-.plupload_button {
-	display: inline-block;
-	text-decoration: none;
-	padding: 4px 8px 1px 15px;
-	margin-right: 4px;
-}
-.plupload_buttons {
-	float: left;
-}
-
-.plupload_button:hover {
-	text-decoration: none;
-}
-
-.plupload_disabled, a.plupload_disabled:hover {
-	cursor: default;
-}
-
-.plupload_add {
-	background: url('/images/icons/add.png') no-repeat 0 center;
-	cursor: pointer;
-}
-
-.plupload_start {
-	background: url('/images/icons/up.png') no-repeat 0 center;
-}
-.plupload_start.plupload_disabled {
-	background-image: url('/images/icons/up_disabled.png');
-}
-
-.plupload_wrapper {
-	font-size: 11px;
-	width: 100%;
-}
-
-.plupload_container {
-	bottom: 0;
-	/*-moz-border-radius: 5px;*/
-}
-
-.plupload_container input {
-	border: 1px solid #DDD;
-	font-size: 11px;
-	width: 98%;
-}
-
-.plupload_filelist {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.plupload_scroll .plupload_filelist {
-	height: 185px;
-	background: #F5F5F5;
-	overflow-y: scroll;
-}
-
-.plupload_filelist li {
-	padding: 10px 8px 6px;
-	border-bottom: 1px solid #DDD;
-}
-
-.plupload_filelist_header, .plupload_filelist_toggle, .plupload_filelist_footer {
-	background: #DFDFDF;
-	padding: 4px 8px;
-	overflow-y: scroll;
-}
-.plupload_filelist_header, .plupload_filelist_toggle {
-	font-size: 12px;
-	font-weight: bold;
-}
-
-.plupload_filelist_toggle .icon {
-	float: right;
-	background: url(/images/icons/unfold.png) no-repeat;
-	width: 10px;
-	height: 8px;
-	margin: 3px 1px 0 0;
-}
-
-.plupload_filelist_header .icon {
-	float: right;
-	background: url(/images/icons/fold.png) no-repeat;
-	width: 10px;
-	height: 8px;
-	margin: 5px 1px 0 30px;
-}
-
-.plupload_filelist_footer {
-	vertical-align: middle;
-}
-.plupload_file_name {
-	float: left;
-	overflow: hidden
-}
-.plupload_file_status { color: #777; }
-.plupload_file_status span { color: #000; }
-.plupload_file_size, .plupload_file_status, .plupload_progress {
-	float: right;
-	width: 80px;
-}
-
-.plupload_filelist_footer .plupload_file_size, .plupload_filelist_footer .plupload_file_status, .plupload_filelist_footer .plupload_progress, .plupload_upload_status {
-	margin-top: 4px;
-}
-.plupload_file_size, .plupload_file_status, .plupload_file_action { text-align: right; }
-
-.plupload_filelist .plupload_file_name { width: 205px; }
-
-.plupload_file_action {
-	float: right;
-	width: 16px;
-	height: 16px;
-	margin-left: 15px;
-}
-
-.plupload_file_action * {
-	display: none;
-	width: 13px;
-	height: 13px;
-}
-
-li.plupload_uploading { background: #E8E8E8; }
-li.plupload_done { color: #AAA; }
-
-li.plupload_delete a {
-	background: url('/images/icons/cancel.png') no-repeat;
-}
-
-li.plupload_failed a {
-	background: url('/images/icons/warning.png') no-repeat;
-}
-
-li.plupload_done a {
-	background: url('/images/icons/confirm.png') no-repeat;
-}
-
-.plupload_progress, .plupload_upload_status {
-	display: none;
-}
-.plupload_upload_status {
-	float: left;
-}
-
-.plupload_progress_container {
-	border: 1px solid #CCC;
-	background: #FFF;
-	padding: 1px;
-}
-.plupload_progress_bar {
-	width: 0px;
-	height: 10px;
-	background: #CCC;
-}
-
-.plupload_scroll .plupload_filelist_header .plupload_file_action, .plupload_scroll .plupload_filelist_footer .plupload_file_action {
-	margin-right: 17px;
-}
-
-/* Floats */
-
-.plupload_clear, .plupload_clearer { clear: both; height: 1px; overflow: hidden; }
-.plupload_clearer, .plupload_progress_bar {
-	display: block;
-	font-size: 0;
-	line-height: 0;	
-}
-
-li.plupload_droptext {
-	background: transparent;
-	text-align: center;
-	vertical-align: middle;
-	border: 0;
-	line-height: 165px;
 }
