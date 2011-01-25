@@ -23,18 +23,11 @@ jQuery(function($) {
 		return ROW.clone().addClass(type);
 	}
 
-	function optionsForBreadcrumb(href) {
-		var options  = [];
-		var dirnames = href.split('/').slice(3);
-		dirnames.pop();
-
-		options.push(Option('/'));
-		$.each(dirnames, function(i) {
-			var path = '/' + dirnames.slice(0, i + 1).join('/') + '/';
-			options.unshift(Option(unescape(this) + '/', path));
+	function optionsForBreadcrumb(resource) {
+		var resources = [resource].concat(resource.ancestors());
+		return $.map(resources, function(r) {
+			return Option(r.displayName + '/', r.href);
 		});
-
-		return options;
 	}
 	var bytesizeFormatter = utils.Formatter.SI('B');
 	function timeFormatter(date) {
@@ -44,7 +37,9 @@ jQuery(function($) {
 		var rows = [];
 
 		$.each(resources, function() {
-			var anchor = $('<A>').text(this.basename).attr('href', this.href);
+			var anchor = $('<A>').
+			             text(this.displayName).
+			             attr('href', this.href);
 			var types  = this.contentType.
 			             replace(/\./g, '-').split('/').join(' ');
 			var row    = Row(types).append(
@@ -53,7 +48,7 @@ jQuery(function($) {
 				Column(bytesizeFormatter(this.contentLength), 'size'),
 				Column(this.contentType.split('/')[0], 'type')
 			);
-			if (this.basename.slice(0, 1) == '.') row.addClass('dotfile');
+			if (this.displayName.slice(0, 1) == '.') row.addClass('dotfile');
 
 			rows.push(row);
 		});
@@ -106,7 +101,7 @@ jQuery(function($) {
 		select.change();
 
 		breadcrumb = this.find('.breadcrumb').empty();
-		$.each(optionsForBreadcrumb(root.href), function() {
+		$.each(optionsForBreadcrumb(root), function() {
 			breadcrumb.append(this);
 		});
 	}
@@ -119,7 +114,7 @@ jQuery(function($) {
 
 	var columns = $('.column').
 	each(function() {
-		var sorter    = utils.Sorter('basename');
+		var sorter    = utils.Sorter('displayName');
 		var resources = [];
 		var root;
 
@@ -308,7 +303,7 @@ jQuery(function($) {
 			var handling;
 			$.each(handler, function(selector) {
 				handling = $(e.target).is(selector);
-				if (handling) this.call(self, $$.data('resources'));
+				if (handling) this.call(self);
 				return !handling;
 			});
 			if (!handling) {
@@ -319,20 +314,26 @@ jQuery(function($) {
 	};
 
 	$('#context-menu').menu({
-		'#get-resource': function(resources) {}, // single resource
-		'#delete': function(resources) {},
-		'#copy': function(resources) {},
-		'#move': function(resources) {},
-		'#make-directory': function(resources) {}, // root
-		'#properties': function(resources) {} // single resource
+		'#get-resource': function() {}, // single resource
+		'#delete': function() {},
+		'#copy': function() {},
+		'#move': function() {},
+		'#make-directory': function() {}, // root
+		'#properties': function() {} // single resource
 	}).bind('activate', function() {
 		var $$ = $(this);
 		var resources = $$.data('resources');
 		var title;
 
 		if (resources.length === 1) {
-			title = resources[0].basename;
+			var resource = resources[0];
+			if (resource.parent()) {
+				title = resource.displayName;
+			} else {
+				title = '/';
+			}
 			$$.removeClass('multiple');
+			if (resource.isCollection()) $$.addClass('collection');
 		} else {
 			$$.addClass('multiple');
 			title = 'Resources';
@@ -453,7 +454,7 @@ jQuery(function($) {
 		WebDAV.PROPFIND(url, function(multistatus) {
 			var resources = [];
 			$('response', multistatus).each(function() {
-				var resource = WebDAV.Resource.call(this);
+				var resource = new WebDAV.Resource(this);
 				resources.push(resource);
 			});
 			column.data('resources', resources).trigger('expire');
