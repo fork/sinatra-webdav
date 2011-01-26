@@ -1,4 +1,13 @@
 (function () {
+	// Yay, IE < 9 does not support Array.indexOf()...
+	if (typeof Array.indexOf !== 'function'){
+		Array.prototype.indexOf = function indexOf(obj) {
+			var i = -1, len = this.length;
+			while (i < len) { if (this[++i] === obj) { return i; } }
+			return -1;
+		};
+	}
+
 	var exports = this;
 	var utils   = exports.utils || {};
 
