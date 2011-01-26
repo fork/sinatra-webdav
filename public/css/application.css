@@ -148,21 +148,19 @@ a:hover img.hover {
 	cursor: pointer;
 	outline: 0;
 	border: none;
+	-moz-appearance: none;
 	-webkit-appearance: none;
 	border-radius: 0;
 	letter-spacing: 1px;
-	padding: 3px 4px;
 	margin: 0;
+	padding: 0 0 0 5px;
 	position: absolute;
 	top: 0;
+	min-width: 200px;
+	height: 20px;
 }
-
 .breadcrumb option {
-	display: none;
-}
-.breadcrumb option.first,
-.breadcrumb.active option {
-	display: list-item;
+	padding: 2px 5px;
 }
 
 .typeSelect {
@@ -171,8 +169,8 @@ a:hover img.hover {
 	letter-spacing: 1px;
 	top: 0;
 	right: 0;
-	padding: 3px 4px;
-	width: 200px;
+	padding: 3px 5px;
+	min-width: 200px;
 }
 .typeSelect label {
 	cursor: pointer;
@@ -180,6 +178,7 @@ a:hover img.hover {
 .typeSelect select {
 	display: none;
 	width: 100%;
+	margin-bottom: 2px;
 }
 .typeSelect.active select {
 	display: block;
