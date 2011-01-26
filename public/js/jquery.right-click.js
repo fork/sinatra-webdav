@@ -2,8 +2,9 @@
 
 	function handler(callback, context) {
 		return function(e) {
-			if (e.which == 3) { callback.call(context || this, e); }
-			return e.which != 3;
+			var right = e.which === 3;
+			if (right) { callback.call(context || this, e); }
+			return !right;
 		};
 	}
 	function noContextMenu($$) {
