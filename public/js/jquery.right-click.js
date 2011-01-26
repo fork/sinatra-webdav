@@ -1,30 +1,36 @@
 (function(fn) {
+	var $$ = $(document), handler;
+	var mousedown = 'mousedown', mouseup = 'mouseup';
 
-	function handler(callback, context) {
-		return function(e) {
-			var right = e.which === 3;
-			if (right) { callback.call(context || this, e); }
-			return !right;
+	function noMenu() { return false; }
+
+	if ($.browser.mozilla) {
+		handler = function handler(callback) {
+			return function(e) {
+				if (e.which === 3) { callback.call(this, e); }
+			};
 		};
-	}
-	function noContextMenu($$) {
-		return $$.each(function() {
-			this.oncontextmenu = function() { return false; };
-		});
+	} else {
+		handler = function handler(callback) {
+			return function(e) {
+				if (e.which === 3) { callback.call(this, e); }
+				if (e.type === mousedown) { $$.one('contextmenu', noMenu); }
+			};
+		};
 	}
 
 	fn.rightClick = function rightClick(callback) {
-		return noContextMenu(this).mousedown(function() {
-			$(this).one('mouseup', handler(callback, this));
+		return this.rightMousedown(function() {
+			$(this).one(mouseup, handler(callback));
 		});
 	};
 
 	fn.rightMousedown = function rightMousedown(callback) {
-		return noContextMenu(this).mousedown(handler(callback));
+		return this[mousedown](handler(callback));
 	};
 
 	fn.rightMouseup = function rightMouseup(callback) {
-		return noContextMenu(this).mouseup(handler(callback));
+		return this[mouseup](handler(callback));
 	};
 
 })(jQuery.fn);
