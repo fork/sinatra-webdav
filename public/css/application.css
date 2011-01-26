@@ -19,7 +19,7 @@ body.double {
 	min-width: 960px;
 }
 .column {
-	background-color: white;
+	background-color: plum;
 	position: absolute;
 	top: 0;
 	bottom: 1.4em;
@@ -83,7 +83,7 @@ body.double {
 	padding: 4px;
 }
 #context-menu a:hover {
-	background-color: #ccc;
+	background-color: thistle;
 }
 #context-menu h3 {
 	margin: 0;
@@ -147,13 +147,16 @@ a:hover img.hover {
 .breadcrumb {
 	cursor: pointer;
 	outline: 0;
+	font-family: Helvetica, sans-serif;
+	font-size: 12px;
 	border: none;
 	-moz-appearance: none;
 	-webkit-appearance: none;
 	border-radius: 0;
 	letter-spacing: 1px;
 	margin: 0;
-	padding: 0 0 0 5px;
+	line-height: 13px;
+	padding: 3px 0 3px 5px;
 	position: absolute;
 	top: 0;
 	min-width: 200px;
@@ -171,6 +174,7 @@ a:hover img.hover {
 	right: 0;
 	padding: 3px 5px;
 	min-width: 200px;
+	min-height: 14px;
 }
 .typeSelect label {
 	cursor: pointer;
@@ -199,7 +203,7 @@ table {
 	cursor: pointer;
 }
 th {
-	background-color: gainsboro;
+	background-color: thistle;
 	padding: 4px 8px;
 	white-space: nowrap;
 }
