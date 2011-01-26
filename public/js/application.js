@@ -326,7 +326,8 @@ jQuery(function($) {
 		'#copy': function() {},
 		'#move': function() {},
 		'#make-directory': function() {}, // root
-		'#properties': function() {} // single resource
+		'#properties': function() {}, // single resource
+		'#exit': function() { location.href ='/auth/logout'; }
 	}).bind('activate', function() {
 		var $$ = $(this);
 		var resources = $$.data('resources');

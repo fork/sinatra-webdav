@@ -54,9 +54,7 @@ class Application < WebDAV::Base
   mime_type :include, 'text/html'
 
   # Authentication
-  use OmniAuth::Strategies::CAS,
-      :cas_server               => 'https://rubycas.fork.de',
-      :cas_service_validate_url => 'https://rubycas.fork.de/proxyValidate'
+  use OmniAuth::Strategies::CAS, :cas_server => 'https://rubycas.fork.de'
   enable :sessions
 
   get '/auth/:name/callback' do
@@ -64,9 +62,9 @@ class Application < WebDAV::Base
     redirect '/'
   end
 
-  get '/logout' do
+  get '/auth/logout' do
     session.delete :user
-    redirect '/'
+    redirect 'http://github.com/fork'
   end
 
   helpers do
