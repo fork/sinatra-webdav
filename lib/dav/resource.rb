@@ -69,8 +69,8 @@ module DAV
       end
     end
 
-    def join(path)
-      resource.new uri.merge(path), app
+    def join(href)
+      resource.new uri.join(href), app
     end
     def parent
       @parent ||= join "#{ File.dirname uri.path }/".sub('//', '/')

@@ -2,6 +2,7 @@ source 'http://rubygems.org'
 
 gem 'sinatra', :require => 'sinatra/base'
 gem 'nokogiri'
+gem 'addressable', :require => 'addressable/uri'
 
 group :example do
   gem 'omniauth'

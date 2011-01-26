@@ -24,7 +24,7 @@ module DAV
     end
 
     def path
-      File.join "#{ resource.root }#{ URI.unescape uri.path }".split('/')
+      File.join "#{ resource.root }#{ Addressable::URI.unencode uri.path }".split('/')
     end
 
     def exist?
@@ -39,8 +39,7 @@ module DAV
           next if name == '.' or name == '..'
 
           name << '/' if File.directory? File.join(path, name)
-          name = URI.escape name
-          name = URI.escape name, ' :[]'
+          name = Addressable::URI.encode name
 
           instance = join name
           yield instance if block_given?

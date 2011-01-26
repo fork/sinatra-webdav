@@ -8,13 +8,13 @@ module WebDAV::Convenience
   end
 
   def request_uri
-    URI encode_and_escape(request.url)
+    Addressable::URI.parse encode_and_escape(request.url)
   end
   def resource
     @resource ||= DAV::Resource.new request_uri, self
   end
   def destination_uri
-    URI encode_and_escape(request.env['HTTP_DESTINATION'])
+    Addressable::URI.parse encode_and_escape(request.env['HTTP_DESTINATION'])
   end
   def destination
     @destination ||= resource.join destination_uri
@@ -44,10 +44,13 @@ module WebDAV::Convenience
     end
 
     def encode_and_escape(url)
-      url = URI.unescape url unless passenger?
-      url = url.encode 'utf-8', :invalid => :replace, :undef => :replace, :replace => ''
+      url = Addressable::URI.unencode url unless passenger?
+      url = url.encode 'utf-8',
+        :invalid => :replace,
+        :undef   => :replace,
+        :replace => ''
 
-      URI.escape url
+      Addressable::URI.encode url
     end
 
 end

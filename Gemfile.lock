@@ -80,6 +80,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  addressable
   hoptoad_notifier
   nokogiri
   omniauth
