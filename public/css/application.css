@@ -181,8 +181,14 @@ a:hover img.hover {
 }
 .typeSelect select {
 	display: none;
+	font-size: 12px;
+	border: none;
 	width: 100%;
-	margin-bottom: 2px;
+	margin: 2px 0;
+}
+.typeSelect optgroup {
+	font-family: Helvetica, sans-serif;
+	font-style: normal;
 }
 .typeSelect.active select {
 	display: block;
