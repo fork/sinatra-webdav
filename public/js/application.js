@@ -252,8 +252,10 @@ jQuery(function($) {
 				context.push(root);
 			}
 
-			$('#context-menu').data('resources', context).menu('activate').
-			one('deactivate', function() { rows.removeClass('active'); });
+			$('#context-menu').data({resources: context, column: column}).
+			menu('activate').one('deactivate', function() {
+				rows.removeClass('active');
+			});
 		});
 	});
 
@@ -315,7 +317,11 @@ jQuery(function($) {
 	};
 
 	$('#context-menu').menu({
-		'#get-resource': function() {}, // single resource
+		'#get-resource': function() {
+			var column = $(this).data('column');
+			var resource = $(this).data('resources')[0];
+			Controller(resource.contentType).apply(column, [resource.href]);
+		},
 		'#delete': function() {},
 		'#copy': function() {},
 		'#move': function() {},
