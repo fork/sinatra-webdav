@@ -5,7 +5,7 @@ title= title
 
 link rel="stylesheet" href="/css/application.css" type="text/css" media="screen" charset="utf-8"
 
-body#container
+body#container.single
 
   form#first.column.focus
     .margin
@@ -57,30 +57,27 @@ body#container
 
   ul#context-menu.shadow
     li.resource
-      h3
-        a#get-resource
-    li.resources
-      h3 Resources
-    li.resource
-      a#clipboard Copy path to clipboard
-    li.resource
-      a#properties Properties
+      a#get-resource Open
     li.resource
       hr
-    li.collection
-      a#make-directory Make Directory
     li
       a#delete Delete
+    li
+      hr
+    li
+      a#get-info Get Info
+    li
+      a#duplicate Duplicate
     li
       a#copy Copy
     li
       a#move Move
     li.resource
-      a#rename Rename Resource
-    li
       hr
-    li
-      a#logout Logout
+    li.resource
+      a#rename Rename Resource
+    li.resource
+      a#clipboard Copy Path
 
 
   #log.minimized
@@ -89,7 +86,6 @@ body#container
 script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js" type="text/javascript"
 script src="/js/jquery.ba-bbq.min.js" type="text/javascript"
 script src="/js/jquery.right-click.min.js" type="text/javascript"
-script src="/js/jquery.bigtext.js" type="text/javascript"
 script src="/js/controller.js" type="text/javascript"
 script src="/js/webdav.js" type="text/javascript"
 script src="/js/utils.js" type="text/javascript"

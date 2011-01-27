@@ -57,12 +57,14 @@ body.double {
 }
 
 .shadow {
-  -moz-box-shadow: 3px 3px 3px dimgrey;
-  -webkit-box-shadow: 3px 3px 3px dimgrey;
-  box-shadow: 3px 3px 3px dimgrey;
+  -moz-box-shadow: 0 0 3px darkslategrey;
+  -webkit-box-shadow: 0 0 3px darkslategrey;
+  box-shadow: 0 0 3px darkslategrey;
 }
 
 #context-menu {
+	-moz-border-radius: 5px;
+	     border-radius: 5px;
 	display: none;
 	background-color: thistle;
 	position: absolute;
@@ -71,6 +73,14 @@ body.double {
 	padding: 0;
 	width: 240px;
 	overflow-x: hidden;
+}
+#context-menu li:first-child a {
+	-moz-border-radius: 5px 5px 0 0;
+	     border-radius: 5px 5px 0 0;
+}
+#context-menu li:last-child a {
+	-moz-border-radius: 0 0 5px 5px;
+	     border-radius: 0 0 5px 5px;
 }
 #context-menu.active {
 	display: block;
@@ -82,33 +92,16 @@ body.double {
 	cursor: pointer;
 	display: block;
 	padding: 4px;
-	background-color: thistle;
 }
 #context-menu a:hover {
-	background-color: plum;
-}
-#context-menu .resource h3:hover,
-#context-menu .resource h3:hover a {
-	background-color: limegreen;
-}
-#context-menu h3 a {
-	background-color: palegreen;
-}
-#context-menu h3 {
-	border-bottom: 2px ridge palegreen;
-	margin: 0;
-	padding: 4px;
-	color: black;
-	background-color: palegreen;
-	width: 100%;
-	max-width: 240px;
+	background-color: dimgrey;
+	color: white;
 }
 
+.double #duplicate,
+.single #copy,
 .resources .resource,
-.resources .collection,
-.resource .resources,
-.collection .resources,
-.resource .collection {
+.resource .resources {
 	display: none;
 }
 
@@ -239,7 +232,7 @@ tr.active:hover {
 }
 tr.selected,
 tr.selected:hover {
-	background-color: dimgray;
+	background-color: dimgrey;
 }
 tr.active *,
 tr.selected * {
@@ -285,7 +278,7 @@ tr.selected * {
 }
 
 .button {
-	background-color: dimgray;
+	background-color: dimgrey;
 	color: white;
 	cursor: pointer;
 	padding: 4px 8px;

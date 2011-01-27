@@ -225,7 +225,7 @@ jQuery(function($) {
 			e.preventDefault();
 		});
 
-		var dataContainer = column.find('.data').
+		column.find('.data').
 		click(function(e) {
 			// support global deselect
 			var tableClicked = $('table', this).has(e.target).length > 0;
@@ -254,13 +254,8 @@ jQuery(function($) {
 			}
 
 			$('#context-menu').data({resources: context, column: column}).
-			one('deactivate', function() {
-				rows.removeClass('active');
-				dataContainer.css('overflow-y', 'scroll');
-			}).
+			one('deactivate', function() { rows.removeClass('active'); }).
 			menu('activate');
-
-			dataContainer.css('overflow-y', 'hidden');
 		});
 	});
 
@@ -328,49 +323,40 @@ jQuery(function($) {
 		'#get-resource': function() {
 			var column = $(this).data('column');
 			var resource = $(this).data('resources')[0];
+			// RADAR just GET the resource.href for multiple resources in
+			//       seperate windows?
+			// var resources = $(this).data('resources');
+			// $.each(resources, function() { window.open(this.href); });
 			Controller(resource.contentType).apply(column, [resource.href]);
 		},
-		'#delete': function() {},
+		'#delete': function() {
+			var column = $(this).data('column');
+			var resources = $(this).data('resources');
+			var count = resources.length;
+		},
+		'#duplicate': function() {},
 		'#copy': function() {},
 		'#move': function() {},
-		'#make-directory': function() {}, // root
-		'#properties': function() {}, // single resource
-		'#logout': function() {
-			sure = confirm('Are you sure?');
-			if (sure) location.href = '/auth/logout';
-		}
+		'#rename': function() {},
+		'#clipboard': function() {},
+		'#get-info': function() {}
+		//'#make-directory': function() {},
+		//'#logout': function() {
+		//	sure = confirm('Are you sure?');
+		//	if (sure) location.href = '/auth/logout';
+		//}
 	}).bind('activate', function() {
 		var $$ = $(this);
 		var resources = $$.data('resources');
 		var title;
 
 		if (resources.length === 1) {
-			var resource = resources[0];
-
-			if (resource.parent()) {
-				title = resource.displayName;
-			} else {
-				title = '/';
-			}
-
 			$$.removeClass('resources');
-
-			if (resource.isCollection()) {
-				$$.addClass('collection');
-			} else {
-				$$.addClass('resource');
-			}
+			$$.addClass('resource');
 		} else {
-			$$.removeClass('collection resource');
+			$$.removeClass('resource');
 			$$.addClass('resources');
-			title = 'Resources';
 		}
-
-		$('h3 a', this).text(title);
-		$('li:first:visible', this).bigtext({
-			childSelector: '> h3',
-			maxfontsize:   2.6
-		});
 	});
 
 	$('.typeSelect').each(function() {
@@ -419,6 +405,8 @@ jQuery(function($) {
 					values.push(option.attr('value') || option.text());
 				});
 
+				// metaKey on OS X
+				// TODO ctrlKey on Windows and Linux
 				if (e.metaKey) {
 					var selectedValues = select.val();
 					var value = selectedValues.pop();
