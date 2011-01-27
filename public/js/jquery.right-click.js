@@ -1,23 +1,15 @@
 (function(fn) {
-	var $$ = $(document), handler;
+	var $$ = $(document);
 	var mousedown = 'mousedown', mouseup = 'mouseup';
 
 	function noMenu() { return false; }
 
-	if ($.browser.mozilla) {
-		handler = function handler(callback) {
-			return function(e) {
-				if (e.which === 3) { callback.call(this, e); }
-			};
+	function handler(callback) {
+		return function(e) {
+			if (e.which === 3) { callback.call(this, e); }
+			if (e.type === mousedown) { $$.one('contextmenu', noMenu); }
 		};
-	} else {
-		handler = function handler(callback) {
-			return function(e) {
-				if (e.which === 3) { callback.call(this, e); }
-				if (e.type === mousedown) { $$.one('contextmenu', noMenu); }
-			};
-		};
-	}
+	};
 
 	fn.rightClick = function rightClick(callback) {
 		return this.rightMousedown(function() {
