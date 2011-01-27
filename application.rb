@@ -65,7 +65,9 @@ class Application < WebDAV::Base
 
   get '/auth/logout' do
     session.delete :user
-    redirect 'http://github.com/fork'
+
+    return_to = "#{ request.scheme }://#{ request.host_with_port }/"
+    redirect "https://rubycas.fork.de/logout?url=#{ return_to }"
   end
 
   get '/auth/failure' do

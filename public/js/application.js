@@ -335,7 +335,10 @@ jQuery(function($) {
 		'#move': function() {},
 		'#make-directory': function() {}, // root
 		'#properties': function() {}, // single resource
-		'#quit': function() { location.href = '/auth/logout'; }
+		'#logout': function() {
+			sure = confirm('Are you sure?');
+			if (sure) location.href = '/auth/logout';
+		}
 	}).bind('activate', function() {
 		var $$ = $(this);
 		var resources = $$.data('resources');
