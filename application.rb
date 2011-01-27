@@ -94,21 +94,23 @@ class Application < WebDAV::Base
 
   # Deliver JavaScript client...
   set :views, "#{ File.dirname __FILE__ }/views"
+  get '/' do
+    slim :index, :locals => { :title => 'WebDAV' }
+  end
+  get '*/' do
+    not_found unless resource.exist?
+
+    url = request.path
+    url << '/' unless url =~ /\/$/
+
+    redirect "/#url=#{ url }"
+  end
   get '*' do
     not_found unless resource.exist?
 
     unless resource.collection?
       content_type resource.type
       body resource.get
-    else
-      if resource.basename == '/'
-        slim :index, :locals => { :title => 'WebDAV' }
-      else 
-        url = request.path
-        url << '/' unless url =~ /\/$/
-
-        redirect "/#url=#{ url }"
-      end
     end
   end
 
