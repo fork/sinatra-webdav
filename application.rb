@@ -68,6 +68,10 @@ class Application < WebDAV::Base
     redirect 'http://github.com/fork'
   end
 
+  get '/auth/failure' do
+    unauthorized
+  end
+
   helpers do
     def authorized?
       session.member? :user
