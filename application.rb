@@ -26,14 +26,15 @@ class OmniAuth::Strategies::CAS::ServiceTicketValidator
     http.use_ssl = @uri.port == 443 || @uri.instance_of?(URI::HTTPS)
 
     # MONKEY-PATCH BEGIN
-
     # ... until we have an official certificate
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
     # MONKEY-PATCH END
 
     http.start do |c|
-      response = c.get "#{@uri.path}?#{@uri.query}", VALIDATION_REQUEST_HEADERS
+      # MONKEY-PATCH BEGIN
+      # ... until net/http is fixed
+      response = c.get "#{@uri.path}?#{@uri.query}", VALIDATION_REQUEST_HEADERS.dup
+      # MONKEY-PATCH END
       result = response.body
     end
     result
