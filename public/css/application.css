@@ -57,19 +57,20 @@ body.double {
 }
 
 .shadow {
-  -moz-box-shadow: 3px 3px 1px black;
-  -webkit-box-shadow: 3px 3px 1px black;
-  box-shadow: 3px 3px 1px black;
+  -moz-box-shadow: 3px 3px 3px dimgrey;
+  -webkit-box-shadow: 3px 3px 3px dimgrey;
+  box-shadow: 3px 3px 3px dimgrey;
 }
 
 #context-menu {
 	display: none;
-	background-color: white;
+	background-color: thistle;
 	position: absolute;
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
-	min-width: 12em;
+	width: 240px;
+	overflow-x: hidden;
 }
 #context-menu.active {
 	display: block;
@@ -81,22 +82,33 @@ body.double {
 	cursor: pointer;
 	display: block;
 	padding: 4px;
-}
-#context-menu a:hover {
 	background-color: thistle;
 }
+#context-menu a:hover {
+	background-color: plum;
+}
+#context-menu .resource h3:hover,
+#context-menu .resource h3:hover a {
+	background-color: limegreen;
+}
+#context-menu h3 a {
+	background-color: palegreen;
+}
 #context-menu h3 {
+	border-bottom: 2px ridge palegreen;
 	margin: 0;
 	padding: 4px;
-	background-color: darkmagenta;
-	color: aliceblue;
-	font-weight: normal;
-	text-align: center;
-	letter-spacing: 1px;
+	color: black;
+	background-color: palegreen;
+	width: 100%;
+	max-width: 240px;
 }
 
-.multiple .resource,
-.multiple .collection {
+.resources .resource,
+.resources .collection,
+.resource .resources,
+.collection .resources,
+.resource .collection {
 	display: none;
 }
 
@@ -237,6 +249,10 @@ tr.selected * {
 	text-align: left;
 	padding-left: 8px;
 	min-width: 55%;
+}
+.name a {
+	display: block;
+	width: 100%;
 }
 .size, .type {
 	text-align: right;

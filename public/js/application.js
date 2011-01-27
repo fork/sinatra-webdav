@@ -225,7 +225,8 @@ jQuery(function($) {
 			e.preventDefault();
 		});
 
-		column.find('.data').click(function(e) {
+		var dataContainer = column.find('.data').
+		click(function(e) {
 			// support global deselect
 			var tableClicked = $('table', this).has(e.target).length > 0;
 			if (!tableClicked) { tbody.find('tr').removeClass('selected'); }
@@ -253,9 +254,13 @@ jQuery(function($) {
 			}
 
 			$('#context-menu').data({resources: context, column: column}).
-			menu('activate').one('deactivate', function() {
+			one('deactivate', function() {
 				rows.removeClass('active');
-			});
+				dataContainer.css('overflow-y', 'scroll');
+			}).
+			menu('activate');
+
+			dataContainer.css('overflow-y', 'hidden');
 		});
 	});
 
@@ -269,6 +274,8 @@ jQuery(function($) {
 
 	function Menu($$) {
 		var menu = this;
+
+		$$.data('menu', menu);
 
 		menu.deactivate = function deactivate() {
 			$$.trigger('deactivate');
@@ -295,11 +302,12 @@ jQuery(function($) {
 		var menu = $$.data('menu');
 
 		if (typeof menu === 'undefined') {
-			menu = new Menu(this);
-			$$.data('menu', menu);
+			menu = new Menu($$);
+		} else if (typeof handler === 'string') {
+			return menu[handler]();
+		} else {
+			return menu;
 		}
-
-		if (typeof handler === 'string') { return menu[handler](); }
 
 		return this.click(function(e) {
 			var self = this;
@@ -327,7 +335,7 @@ jQuery(function($) {
 		'#move': function() {},
 		'#make-directory': function() {}, // root
 		'#properties': function() {}, // single resource
-		'#exit': function() { location.href ='/auth/logout'; }
+		'#quit': function() { location.href = '/auth/logout'; }
 	}).bind('activate', function() {
 		var $$ = $(this);
 		var resources = $$.data('resources');
@@ -335,19 +343,31 @@ jQuery(function($) {
 
 		if (resources.length === 1) {
 			var resource = resources[0];
+
 			if (resource.parent()) {
 				title = resource.displayName;
 			} else {
 				title = '/';
 			}
-			$$.removeClass('multiple');
-			if (resource.isCollection()) $$.addClass('collection');
+
+			$$.removeClass('resources');
+
+			if (resource.isCollection()) {
+				$$.addClass('collection');
+			} else {
+				$$.addClass('resource');
+			}
 		} else {
-			$$.addClass('multiple');
+			$$.removeClass('collection resource');
+			$$.addClass('resources');
 			title = 'Resources';
 		}
 
-		$('h3', this).text(title);
+		$('h3 a', this).text(title);
+		$('li:first:visible', this).bigtext({
+			childSelector: '> h3',
+			maxfontsize:   2.6
+		});
 	});
 
 	$('.typeSelect').each(function() {
