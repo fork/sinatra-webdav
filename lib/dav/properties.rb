@@ -127,13 +127,13 @@ module DAV
       end
 
       def collection?
-        @collection ||= stat.directory?
+        resource.collection?
       end
       def creationdate
-        stat.ctime
+        stat.ctime.httpdate
       end
       def displayname
-        File.basename resource.path
+        resource.display_name
       end
       def getlastmodified
         stat.mtime.httpdate

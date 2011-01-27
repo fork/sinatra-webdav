@@ -5,6 +5,8 @@ module DAV
       attr_accessor :root
     end
 
+    URI = Addressable::URI
+
     def self.included(base)
       base.extend ClassMethods
       base.root = Dir.getwd
@@ -24,7 +26,8 @@ module DAV
     end
 
     def path
-      File.join "#{ resource.root }#{ Addressable::URI.unencode uri.path }".split('/')
+      decoded_path = decoded_uri.path
+      File.join "#{ resource.root }#{ decoded_path }".split('/')
     end
 
     def exist?
@@ -34,15 +37,18 @@ module DAV
       collection = []
       return collection unless collection?
 
+      decoded_path = decoded_uri.path
+      absolute_dirname = File.join "#{ resource.root }#{ decoded_path }".split('/')
+
       Dir.open path do |dir|
         while name = dir.read
           next if name == '.' or name == '..'
+          name << '/' if File.directory? File.join(absolute_dirname, name)
 
-          name << '/' if File.directory? File.join(path, name)
-          name = Addressable::URI.encode name
+          instance = join "#{ decoded_path }#{ name }"
 
-          instance = join name
           yield instance if block_given?
+
           collection << instance
         end
       end

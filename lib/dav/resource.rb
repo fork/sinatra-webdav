@@ -2,6 +2,8 @@ module DAV
   class Resource < Struct.new(:uri, :app)
     include EventHandling
 
+    URI = Addressable::URI
+
     class LogMethod < Struct.new(:method)
       def call(resource)
         $stderr.puts "#{ method } #{ resource }"
@@ -69,13 +71,18 @@ module DAV
       end
     end
 
+    def decoded_uri
+      @decoded_uri ||= URI.unencode uri, URI
+    end
+
     def join(href)
-      resource.new uri.join(href), app
+      encoded_uri = URI.encode decoded_uri.join(href), URI
+      resource.new encoded_uri, app
     end
     def parent
       @parent ||= join "#{ File.dirname uri.path }/".sub('//', '/')
     end
-    def basename
+    def display_name
       File.basename uri.path
     end
     def ==(other)
@@ -119,7 +126,7 @@ module DAV
 
           if depth > 0
             children do |child|
-              basename = child.basename
+              basename = child.display_name
               basename << '/' if child.collection?
 
               child.copy destination.join(basename), depth - 1
