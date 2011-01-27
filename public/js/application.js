@@ -37,9 +37,13 @@ jQuery(function($) {
 		var rows = [];
 
 		$.each(resources, function() {
-			var anchor = $('<A>').
-			             text(this.displayName).
-			             attr('href', this.href);
+			var abbr = this.displayName;
+			if (abbr.length > 60) {
+				var lastDot = abbr.lastIndexOf('.');
+				abbr = abbr.slice(0, 60) + ' ... ' + abbr.slice(lastDot);
+			}
+			var anchor = $('<A>').text(abbr).
+			             attr({href: this.href, title: this.displayName});
 			var types  = this.contentType.
 			             replace(/\./g, '-').split('/').join(' ');
 			var row    = Row(types).append(
