@@ -282,10 +282,10 @@ jQuery(function($) {
 			return $$;
 		};
 		menu.activate = function activate() {
-			$$.trigger('activate');
 			// TODO set offset so nothing of context menu is hidden
 			$$.css(position);
 			$$.addClass('active');
+			$$.trigger('activate');
 			return $$;
 		};
 
@@ -342,26 +342,33 @@ jQuery(function($) {
 		'#copy': function() {},
 		'#move': function() {},
 		'#rename': function() {},
-		'#clipboard': function() {},
-		'#get-info': function() {}
+		'#clipboard': function() {
+			//
+		},
+		'#get-info': function() {
+			// emit PROPFINDs
+		}
 		//'#make-directory': function() {},
 		//'#logout': function() {
 		//	sure = confirm('Are you sure?');
 		//	if (sure) location.href = '/auth/logout';
 		//}
 	}).bind('activate', function() {
-		var $$ = $(this);
+		var $$        = $(this).removeClass('resources resource');
 		var resources = $$.data('resources');
-		var title;
+		var singular  = resources.length === 1;
 
-		if (resources.length === 1) {
-			$$.removeClass('resources');
+		if (singular) {
 			$$.addClass('resource');
-		} else {
-			$$.removeClass('resource');
-			$$.addClass('resources');
+			clipboard.zeroclipboard({text: resources[0].path()});
 		}
+		else { $$.addClass('resources'); }
 	});
+
+	$.extend(ZeroClipboard, {
+		moviepath: '/js/zeroclipboard/zeroclipboard.swf'
+	});
+	var clipboard = $('#clipboard').zeroclipboard({ hand: true });
 
 	$('.typeSelect').each(function() {
 		var $$ = $(this);
@@ -456,8 +463,8 @@ jQuery(function($) {
 	};
 	Controller['text/html'] = function(url) {
 		var host = location.protocol + '//' + location.host;
-		var path = url.replace(/https?:\/\//, '');
-	
+		var path = url.slice(host.length);
+
 		window.location = 'http://vizard.fork.de/' + path + '?path=' + url +
 		'&origin='      + host +
 		'&return='      + location.href +
