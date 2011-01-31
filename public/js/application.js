@@ -359,10 +359,27 @@ jQuery(function($) {
 		'#rename': function() {
 			var column   = menu.data('column');
 			var resource = menu.data('resources')[0];
+			var all      = column.data('resources');
 
-			var displayName = prompt(resource.displayName);
+			var displayName = prompt('Enter new filename:', resource.displayName);
 
-			console.log(displayName);
+			if (displayName) {
+				var href = decodeURIComponent(resource.parent().href);
+				href += displayName;
+				if (resource.isCollection()) { href += '/'; }
+
+				var destination = $.extend({}, resource, {
+					displayName: displayName,
+					href: href,
+					lastModified: new Date()
+				});
+
+				resource.move(destination.href, function() {
+					var index = all.indexOf(resource);
+					all[index] = destination;
+					column.trigger('sort');
+				}, 1 / 0, false);
+			}
 		},
 		'#get-info': function() {
 			// emit PROPFINDs
