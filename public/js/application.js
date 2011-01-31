@@ -218,10 +218,15 @@ jQuery(function($) {
 					row.addClass('selected');
 				}
 			}
-
+		}).
+		dblclick(function(e) {
 			var isAnchor = e.target.tagName === 'A';
-			if (isAnchor && selected) {
-				var type = resources[index].contentType;
+			if (isAnchor) { 
+				var rows     = tbody.children('tr');
+				var row      = rows.has(e.target);
+				var index    = rows.index(row);
+				var type     = resources[index].contentType;
+
 				Controller(type).apply(column, [e.target.href]);
 			}
 		}).
