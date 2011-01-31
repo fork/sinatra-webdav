@@ -39,7 +39,7 @@
 				$$.data('zeroclipboard').ready = true;
 				ZeroClipboard.update(id);
 			} else {
-				var match = /mouse(over|out|up|down)$/.match(eventName);
+				var match = eventName.match(/mouse(over|out|up|down)$/)[1];
 
 				if (match === 'over') {
 					$$.trigger('mouseover');

@@ -368,7 +368,9 @@ jQuery(function($) {
 	$.extend(ZeroClipboard, {
 		moviepath: '/js/zeroclipboard/zeroclipboard.swf'
 	});
-	var clipboard = $('#clipboard').zeroclipboard({ hand: true });
+	var clipboard = $('#clipboard').zeroclipboard({ hand: true }).
+	mouseover(function() { clipboard.addClass('hover'); }).
+	mouseout(function() { clipboard.removeClass('hover'); });
 
 	$('.typeSelect').each(function() {
 		var $$ = $(this);

@@ -93,7 +93,8 @@ body.double {
 	display: block;
 	padding: 4px;
 }
-#context-menu a:hover {
+#context-menu a:hover,
+#context-menu a.hover {
 	background-color: dimgrey;
 	color: white;
 }
