@@ -79,9 +79,13 @@
 
 			return value;
 		};
-		proto.copy = function copy(destination, depth, callback) {
-			
+		proto.copy = function copy(destination, callback, depth, overwrite) {
+			WebDAV.COPY(this.href, destination, callback, depth, overwrite);
 		};
+		proto['delete'] = function(callback) {
+			WebDAV.DELETE(this.href, callback);
+		};
+		proto.del = proto['delete'];
 		// ...
 	})(Resource.prototype);
 
@@ -136,13 +140,15 @@
 				url: url
 			});
 		},
-		COPY: function(url, destination, callback, overwrite) {
+		COPY: function(url, destination, callback, depth, overwrite) {
 			if (typeof(overwrite) == 'undefined') overwrite = 'T';
+			if (typeof(depth) == 'undefined') depth = 'infinity';
 
 			$.ajax({
 				beforeSend: function(req) {
 					req.setRequestHeader("DESTINATION", destination);
 					req.setRequestHeader("OVERWRITE", overwrite);
+					req.setRequestHeader("DEPTH", depth);
 				},
 				complete: function(request, status) {
 					if (status == 'success') {
@@ -153,13 +159,15 @@
 				url: url
 			});
 		},
-		MOVE: function(url, destination, callback, overwrite) {
+		MOVE: function(url, destination, callback, depth, overwrite) {
 			if (typeof(overwrite) == 'undefined') overwrite = 'T';
+			if (typeof(depth) == 'undefined') depth = 'infinity';
 
 			$.ajax({
 				beforeSend: function(req) {
 					req.setRequestHeader("DESTINATION", destination);
 					req.setRequestHeader("OVERWRITE", overwrite);
+					req.setRequestHeader("DEPTH", depth);
 				},
 				complete: function(request, status) {
 					if (status == 'success') {

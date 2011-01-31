@@ -123,13 +123,15 @@ jQuery(function($) {
 		var root;
 
 		var column = $(this).
-		bind('sort', function() {
-			resources.sort(sorter);
-			
+		bind('redraw', function() {
 			tbody = column.find('tbody').empty();
 			$.each(rowsForListing(resources), function() {
 				tbody.append(this);
 			});
+		}).
+		bind('sort', function() {
+			resources.sort(sorter);
+			column.trigger('redraw');
 		}).
 		bind('expire', function(e) {
 			resources = column.data('resources');
@@ -339,12 +341,57 @@ jQuery(function($) {
 			Controller(resource.contentType).apply(column, [resource.href]);
 		},
 		'#delete': function() {
-			var column = $(this).data('column');
+			var column    = $(this).data('column');
 			var resources = $(this).data('resources');
-			var count = resources.length;
+			var count     = resources.length;
+			var all       = column.data('resources');
+
+			$.each(resources, function() {
+				var resource = this;
+				this.del(function() {
+					var index = all.indexOf(resource);
+					all.splice(index, 1);
+					column.trigger('redraw');
+					if (--count === 0) { /* notify user */ }
+				});
+			});
 		},
-		'#duplicate': function() {},
-		'#copy': function() {},
+		'#duplicate': function() {
+			var column    = $(this).data('column');
+			var resources = $(this).data('resources');
+			var all       = column.data('resources');
+			var allNames  = [];
+			for (var i = 0; i < all.length; i++) {
+				allNames.push(all[i].displayName);
+			}
+
+			$.each(resources, function() {
+				var resource    = this;
+				var href        = decodeURIComponent(resource.parent().href);
+				var displayName = basename = resource.displayName + ' Copy';
+				var index       = 0;
+				while (allNames.indexOf(displayName) !== -1) {
+					index++;
+					displayName = basename + ' ' + index;
+				}
+				href += displayName;
+				if (resource.isCollection()) { href += '/'; }
+
+				var duplicate = $.extend({}, resource, {
+					displayName: displayName,
+					href: href,
+					lastModified: new Date()
+				});
+
+				this.copy(duplicate.href, function() {
+					all.push(duplicate);
+					column.trigger('sort');
+				});
+			});
+		},
+		'#copy': function() {
+			
+		},
 		'#move': function() {},
 		'#rename': function() {},
 		'#clipboard': function() {
