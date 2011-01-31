@@ -1,4 +1,6 @@
 jQuery(function($) {
+	var win = $(window), doc = $(document);
+
 	var OPTION = $('<option>');
 	function Option(text, value, selected) {
 		var option = OPTION.clone();
@@ -264,76 +266,32 @@ jQuery(function($) {
 				context.push(root);
 			}
 
-			$('#context-menu').data({resources: context, column: column}).
+			position = fixPosition({ top: e.clientY, left: e.clientX });
+
+			menu.data({resources: context, column: column}).
+			one('activate', function() { menu.css(position); }).
 			one('deactivate', function() { rows.removeClass('active'); }).
-			menu('activate');
+			menu().activate();
 		});
 	});
 
-	var position = { top: 0, left: 0 };
-	$.menu = { position: position };
+	// moves menu to another position if it'd overflow the window limits
+	function fixPosition(position) {
+		var width = menu.outerHeight();
+		var winWidth = win.height();
+		if (winHeight < position.top + height) { position.top -= height; }
 
-	$(document).mousemove(function(e) {
-		position.top  = e.clientY;
-		position.left = e.clientX;
-	});
+		var height = menu.outerWidth();
+		var winHeight = win.width();
+		if (winWidth < position.left + width) { position.left -= width; }
 
-	function Menu($$) {
-		var menu = this;
-
-		$$.data('menu', menu);
-
-		menu.deactivate = function deactivate() {
-			$$.trigger('deactivate');
-			$$.removeClass('active');
-			return $$;
-		};
-		menu.activate = function activate() {
-			// TODO set offset so nothing of context menu is hidden
-			$$.css(position);
-			$$.addClass('active');
-			$$.trigger('activate');
-			return $$;
-		};
-
-		$(document).click(function(e) {
-			if (e.which !== 3) menu.deactivate();
-		});
-
-		return menu;
+		return position;
 	}
 
-	$.fn.menu = function menu(handler) {
-		var $$   = this;
-		var menu = $$.data('menu');
-
-		if (typeof menu === 'undefined') {
-			menu = new Menu($$);
-		} else if (typeof handler === 'string') {
-			return menu[handler]();
-		} else {
-			return menu;
-		}
-
-		return this.click(function(e) {
-			var self = this;
-			var handling;
-			$.each(handler, function(selector) {
-				handling = $(e.target).is(selector);
-				if (handling) this.call(self);
-				return !handling;
-			});
-			if (!handling) {
-				e.preventDefault();
-				e.stopPropagation();
-			}
-		});
-	};
-
-	$('#context-menu').menu({
+	var menu = $('#context-menu').menu({
 		'#get-resource': function() {
-			var column = $(this).data('column');
-			var resource = $(this).data('resources')[0];
+			var column = menu.data('column');
+			var resource = menu.data('resources')[0];
 			// RADAR just GET the resource.href for multiple resources in
 			//       seperate windows?
 			// var resources = $(this).data('resources');
@@ -341,10 +299,13 @@ jQuery(function($) {
 			Controller(resource.contentType).apply(column, [resource.href]);
 		},
 		'#delete': function() {
-			var column    = $(this).data('column');
-			var resources = $(this).data('resources');
+			var column    = menu.data('column');
+			var resources = menu.data('resources');
 			var count     = resources.length;
 			var all       = column.data('resources');
+
+			var sure = confirm('Really delete resource(s)?');
+			if (!sure) return;
 
 			$.each(resources, function() {
 				var resource = this;
@@ -352,14 +313,16 @@ jQuery(function($) {
 					var index = all.indexOf(resource);
 					all.splice(index, 1);
 					column.trigger('redraw');
-					if (--count === 0) { /* notify user */ }
+					if (--count !== 0) { return; }
+					alert('Resource(s) deleted.');
 				});
 			});
 		},
 		'#duplicate': function() {
-			var column    = $(this).data('column');
-			var resources = $(this).data('resources');
+			var column    = menu.data('column');
+			var resources = menu.data('resources');
 			var all       = column.data('resources');
+
 			var allNames  = [];
 			for (var i = 0; i < all.length; i++) {
 				allNames.push(all[i].displayName);
@@ -386,7 +349,7 @@ jQuery(function($) {
 				this.copy(duplicate.href, function() {
 					all.push(duplicate);
 					column.trigger('sort');
-				});
+				}, 1 / 0, false);
 			});
 		},
 		'#copy': function() {
@@ -394,9 +357,6 @@ jQuery(function($) {
 		},
 		'#move': function() {},
 		'#rename': function() {},
-		'#clipboard': function() {
-			//
-		},
 		'#get-info': function() {
 			// emit PROPFINDs
 		}
@@ -406,15 +366,21 @@ jQuery(function($) {
 		//	if (sure) location.href = '/auth/logout';
 		//}
 	}).bind('activate', function() {
-		var $$        = $(this).removeClass('resources resource');
-		var resources = $$.data('resources');
+		var resources = menu.data('resources');
 		var singular  = resources.length === 1;
 
+		menu.removeClass('resources resource');
+
 		if (singular) {
-			$$.addClass('resource');
+			menu.addClass('resource');
 			clipboard.zeroclipboard({text: resources[0].path()});
 		}
-		else { $$.addClass('resources'); }
+		else {
+			menu.addClass('resources');
+		}
+	});
+	doc.click(function(e) {
+		if (e.which !== 3) menu.menu().deactivate();
 	});
 
 	$.extend(ZeroClipboard, {
@@ -427,7 +393,7 @@ jQuery(function($) {
 	$('.typeSelect').each(function() {
 		var $$ = $(this);
 
-		$(document).click(function() { $$.removeClass('active'); });
+		doc.click(function() { $$.removeClass('active'); });
 
 		var label = $$.find('label').
 		click(function(e) {
@@ -499,7 +465,7 @@ jQuery(function($) {
 		$('#container').toggleClass('single double');
 
 		if (visible) {
-			$(window).trigger('hashchange');
+			win.trigger('hashchange');
 		}
 
 		e.stopPropagation();
@@ -529,7 +495,7 @@ jQuery(function($) {
 
 	// Load resources on hashchange
 	var disabled = '<option disabled="disabled">Loading...</option>';
-	$(window).bind('hashchange', function(e) {
+	win.bind('hashchange', function(e) {
 		var column = $('.focus');
 		var url = $.bbq.getState('url');
 
@@ -559,5 +525,5 @@ jQuery(function($) {
 	}).
 	mousedown(function(e) { e.preventDefault(); });
 
-	$(window).trigger('hashchange');
+	win.trigger('hashchange');
 });

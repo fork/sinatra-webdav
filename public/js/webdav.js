@@ -141,8 +141,10 @@
 			});
 		},
 		COPY: function(url, destination, callback, depth, overwrite) {
-			if (typeof(overwrite) == 'undefined') overwrite = 'T';
-			if (typeof(depth) == 'undefined') depth = 'infinity';
+			if (typeof(overwrite) == 'undefined') overwrite = true;
+			overwrite = overwrite.toString().slice(0, 1).toUpperCase();
+			if (typeof(depth) == 'undefined') depth = 1 / 0;
+			depth = depth.toString().toLowerCase();
 
 			$.ajax({
 				beforeSend: function(req) {
@@ -160,8 +162,10 @@
 			});
 		},
 		MOVE: function(url, destination, callback, depth, overwrite) {
-			if (typeof(overwrite) == 'undefined') overwrite = 'T';
-			if (typeof(depth) == 'undefined') depth = 'infinity';
+			if (typeof(overwrite) == 'undefined') overwrite = true;
+			overwrite = overwrite.toString().slice(0, 1).toUpperCase();
+			if (typeof(depth) == 'undefined') depth = 1 / 0;
+			depth = depth.toString().toLowerCase();
 
 			$.ajax({
 				beforeSend: function(req) {
