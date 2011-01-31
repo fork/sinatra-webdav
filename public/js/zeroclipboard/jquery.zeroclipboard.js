@@ -171,14 +171,17 @@
 					ZeroClipboard.update(data.id);
 				}
 			} else { // initialize new zeroClipBoard
-				data.id = generateId();
+				$$.data('zeroclipboard', data);
 
 				$.extend(data, {
+					id:     generateId(),
 					ready:  false,
 					text:   '',
 					resize: false,
 					hand:   false
 				});
+
+				ZeroClipboard.clients[data.id] = this;
 
 				// Grab this elements size
 				var outerWidth  = $$.outerWidth();
@@ -196,7 +199,9 @@
 				container.append(placeholder).appendTo('body');
 
 				swfobject.embedSWF(ZeroClipboard.moviepath, clipboard_id, outerHeight, outerHeight, '9.0.0', '', {
-					'id': data.id
+					'id': data.id,
+					width: outerWidth,
+					height: outerHeight
 				}, {
 					wmode:             'transparent',
 					bgcolor:           '#ffffff',
@@ -206,7 +211,7 @@
 					allowfullscreen:   'false'
 				});
 
-				$$.data('zeroclipboard', data).
+				$$.
 
 				// We check for a resize event called on the element
 				// Note! This only works with the jQuery Resize Event from Ben Alman
