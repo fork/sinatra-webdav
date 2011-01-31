@@ -1,24 +1,31 @@
 (function($) {
+	var zeroclipboard = 'zeroclipboard';
+	var load          = 'load';
+	var mouseover     = 'mouseover';
+	var mouseout      = 'mouseout';
+	var mousedown     = 'mousedown';
+	var mouseup       = 'mouseup';
+	
 	var ZeroClipboard = {
 		moviepath: 'ZeroClipboard.swf',
 		// clients maps the SWF id back to the original element
 		clients: {},
 		dispatch: function (id, eventName, args) {
 			var $$   = $(this.clients[id]);
-			var data = $$.data('zeroclipboard');
+			var data = $$.data(zeroclipboard);
 
 			//console.log('Dispatch: ' + eventName);
 			eventName = eventName.toString().toLowerCase();
 
-			if (eventName === 'load') {
+			if (eventName === load) {
 				// bug fix: Cannot extend EMBED DOM elements in Firefox, must
 				// use traditional function
-				var movie = document.getElementById('zeroclipboard_swf_' + id);
+				var movie = document.getElementById(zeroclipboard + '_swf_' + id);
 				// movie claims it is ready, but in IE this isn't always the
 				// case...
 				if (!movie) {
 					setTimeout(function() {
-						ZeroClipboard.dispatch(id, 'load');
+						ZeroClipboard.dispatch(id, load);
 					}, 1);
 					return;
 				}
@@ -28,26 +35,26 @@
 				if (!data.ready && jQuery.browser.mozilla) {
 					data.ready = true;
 					setTimeout(function() {
-						ZeroClipboard.dispatch(id, 'load');
+						ZeroClipboard.dispatch(id, load);
 					}, 100);
 					return;
 				}
 
 				data.ready = true;
 				ZeroClipboard.update(id);
-			} else if (eventName === 'mouseover') {
-				$$.trigger('mouseover');
-			} else if (eventName === 'mouseout') {
-				$$.trigger('mouseout');
+			} else if (eventName === mouseover) {
+				$$.trigger(mouseover);
+			} else if (eventName === mouseout) {
+				$$.trigger(mouseout);
 				// This is to cover up the bug of dragging the mouse out
 				// of the flash (mainly used when reseting css).
-				if (data.downfix) { $$.trigger('mouseup'); }
-			} else if (eventName === 'mouseup') {
-				$$.trigger('mouseup');
+				if (data.downfix) { $$.trigger(mouseup); }
+			} else if (eventName === mouseup) {
+				$$.trigger(mouseup);
 				data.downfix = false;
-			} else if (eventName === 'mousedown') {
+			} else if (eventName === mousedown) {
 				data.downfix = true;
-				$$.trigger('mousedown');
+				$$.trigger(mousedown);
 			} else if (eventName === 'complete') {
 				$$.trigger('click');
 			}
@@ -55,10 +62,10 @@
 		update: function (id) {
 			// Take the ID, and find the main div.
 			var $$ = $(this.clients[id]);
-			var data = $$.data('zeroclipboard') || {};
+			var data = $$.data(zeroclipboard) || {};
 
-			var fla$h = $('#zeroclipboard_swf_' + id);
-			var flash = fla$h.get(0);
+			var flash = document.getElementById(zeroclipboard + '_swf_' + id);
+			var fla$h = $(flash);
 
 			if (data.resize) {
 				// Get all the details
@@ -100,7 +107,7 @@
 	// Setup window resize event.
 	$(window).resize(function () {
 		$.each(ZeroClipboard.clients, function(id) {
-			$(this).data('zeroclipboard').resize = true;
+			$(this).data(zeroclipboard).resize = true;
 			ZeroClipboard.update(id);
 		});
 	});
@@ -137,15 +144,15 @@
 
 		return this.each(function() {
 			var $$   = $(this);
-			var data = $$.data('zeroclipboard') || {};
-			var clipboard_id = 'zeroclipboard_swf_' + data.id;
+			var data = $$.data(zeroclipboard) || {};
+			var clipboard_id = zeroclipboard + '_swf_' + data.id;
 			
 			if (data.id) { // modify existing zeroClipBoard
 				if (options.destroy) {
-					// console.log("Attempting to remove flash for id #" + id);
+					// console.log("Removing client #" + data.id);
 					// We have a request to destroy the flash, and it appears
 					// we have made the flash object already.
-					$('#zeroclipboard_swf_' + data.id).parent().remove();
+					$('#' + clipboard_id).parent().remove();
 					delete ZeroClipboard.clients[data.id];
 				} else {
 					if (options.text) {
@@ -163,7 +170,7 @@
 					ZeroClipboard.update(data.id);
 				}
 			} else { // initialize new zeroClipBoard
-				$$.data('zeroclipboard', data);
+				$$.data(zeroclipboard, data);
 
 				$.extend(data, {
 					id:     generateId(),
@@ -182,7 +189,7 @@
 				if (outerHeight === 0) { outerHeight++; }
 
 				// create a placeholder div for the SWFObject
-				clipboard_id = 'zeroclipboard_swf_' + data.id;
+				clipboard_id = zeroclipboard + '_swf_' + data.id;
 				var placeholder = $('<div></div>').attr('id', clipboard_id);
 
 				// create our clipboard and container
