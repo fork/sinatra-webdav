@@ -1,63 +1,55 @@
-/**
- * File is created under the GPL.
- * Made by Kris aka DudeAmI
- * http://www.dudeami.com
- *
- * Code is based off of the original Javascript from the zeroclipboard.js
- */
-
 (function($) {
 	var ZeroClipboard = {
 		moviepath: 'ZeroClipboard.swf',
 		// clients maps the SWF id back to the original element
 		clients: {},
 		dispatch: function (id, eventName, args) {
-			var $$ = $(this.clients[id]);
+			var $$   = $(this.clients[id]);
+			var data = $$.data('zeroclipboard');
 
-			console.log('Dispatch: ' + eventName);
+			//console.log('Dispatch: ' + eventName);
 			eventName = eventName.toString().toLowerCase();
 
-			if (/load$/.test(eventName)) {
+			if (eventName === 'load') {
 				// bug fix: Cannot extend EMBED DOM elements in Firefox, must
 				// use traditional function
 				var movie = document.getElementById('zeroclipboard_swf_' + id);
 				// movie claims it is ready, but in IE this isn't always the
 				// case...
 				if (!movie) {
-					setTimeout(function() { ZeroClipboard.dispatch(id, 'load'); }, 1);
+					setTimeout(function() {
+						ZeroClipboard.dispatch(id, 'load');
+					}, 1);
 					return;
 				}
 
 				// firefox on pc needs a "kick" in order to set these in
 				// certain cases
-				if (!$$.data('zeroclipboard').ready && jQuery.browser.mozilla) {
-					$$.data('zeroclipboard').ready = true;
-					setTimeout(function() { ZeroClipboard.dispatch(id, 'load'); }, 100);
+				if (!data.ready && jQuery.browser.mozilla) {
+					data.ready = true;
+					setTimeout(function() {
+						ZeroClipboard.dispatch(id, 'load');
+					}, 100);
 					return;
 				}
 
-				$$.data('zeroclipboard').ready = true;
+				data.ready = true;
 				ZeroClipboard.update(id);
-			} else {
-				var match = eventName.match(/mouse(over|out|up|down)$/)[1];
-
-				if (match === 'over') {
-					$$.trigger('mouseover');
-				} else if (match === 'out') {
-					$$.trigger('mouseout');
-					// This is to cover up the bug of dragging the mouse out
-					// of the flash.
-					// Mainly used when reseting css
-					if ($$.data('zeroclipboard').downfix) {
-						$$.trigger('mouseup');
-					}
-				} else if (match === 'up') {
-					$$.trigger('mouseup');
-					$$.data('zeroclipboard').downfix = false;
-				} else if (match === 'down') {
-					$$.data('zeroclipboard').downfix = true;
-					$$.trigger('mousedown');
-				}
+			} else if (eventName === 'mouseover') {
+				$$.trigger('mouseover');
+			} else if (eventName === 'mouseout') {
+				$$.trigger('mouseout');
+				// This is to cover up the bug of dragging the mouse out
+				// of the flash (mainly used when reseting css).
+				if (data.downfix) { $$.trigger('mouseup'); }
+			} else if (eventName === 'mouseup') {
+				$$.trigger('mouseup');
+				data.downfix = false;
+			} else if (eventName === 'mousedown') {
+				data.downfix = true;
+				$$.trigger('mousedown');
+			} else if (eventName === 'complete') {
+				$$.trigger('click');
 			}
 		},
 		update: function (id) {
@@ -84,11 +76,11 @@
 			}
 
 			if (data.ready) {
-				console.log("[update] text = " + data.text);
+				//console.log("[update] text = " + data.text);
 				flash.setText(data.text);
 				flash.setHandCursor(data.hand);
 			} else {
-				console.log("[update] skipping...");
+				//console.log("[update] skipping...");
 			}
 		}
 	};
@@ -183,32 +175,35 @@
 
 				ZeroClipboard.clients[data.id] = this;
 
-				// Grab this elements size
+				// grab this elements size
 				var outerWidth  = $$.outerWidth();
 				if (outerWidth === 0) { outerWidth++; }
 				var outerHeight = $$.outerHeight();
 				if (outerHeight === 0) { outerHeight++; }
 
-				// Create a temp div for the SWFObject
+				// create a placeholder div for the SWFObject
 				clipboard_id = 'zeroclipboard_swf_' + data.id;
 				var placeholder = $('<div></div>').attr('id', clipboard_id);
 
-				// Create our clipboard and container
+				// create our clipboard and container
 				var container = $('<div></div>').css('position', 'absolute');
 
 				container.append(placeholder).appendTo('body');
 
-				swfobject.embedSWF(ZeroClipboard.moviepath, clipboard_id, outerHeight, outerHeight, '9.0.0', '', {
-					'id': data.id,
-					width: outerWidth,
+				swfobject.embedSWF(ZeroClipboard.moviepath, clipboard_id,
+					outerHeight, outerHeight,
+					'9.0.0', '',
+				{
+					'id':   data.id,
+					width:  outerWidth,
 					height: outerHeight
 				}, {
 					wmode:             'transparent',
 					bgcolor:           '#ffffff',
 					quality:           'best',
-					loop:              'false',
+					loop:              false,
 					allowscriptaccess: 'always',
-					allowfullscreen:   'false'
+					allowfullscreen:   false
 				});
 
 				$$.
@@ -224,7 +219,7 @@
 				// Add an event to test when the element is destroyed to also
 				// destroy the flash object paired with the element.
 				bind('remove', function () {
-					$(this).zeroclipboard({destroy: true});
+					$$.zeroclipboard({destroy: true});
 				}).
 
 				// run update
