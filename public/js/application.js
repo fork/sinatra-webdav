@@ -266,7 +266,7 @@ jQuery(function($) {
 				context.push(root);
 			}
 
-			position = fixPosition({ top: e.clientY, left: e.clientX });
+			var position = fixPosition({ top: e.clientY, left: e.clientX });
 
 			menu.data({resources: context, column: column}).
 			one('activate', function() { menu.css(position); }).
@@ -277,13 +277,13 @@ jQuery(function($) {
 
 	// moves menu to another position if it'd overflow the window limits
 	function fixPosition(position) {
-		var width = menu.outerHeight();
-		var winWidth = win.height();
-		if (winHeight < position.top + height) { position.top -= height; }
-
-		var height = menu.outerWidth();
-		var winHeight = win.width();
+		var width = menu.outerWidth();
+		var winWidth = win.width();
 		if (winWidth < position.left + width) { position.left -= width; }
+
+		var height = menu.outerHeight();
+		var winHeight = win.height();
+		if (winHeight < position.top + height) { position.top -= height; }
 
 		return position;
 	}
@@ -356,7 +356,14 @@ jQuery(function($) {
 			
 		},
 		'#move': function() {},
-		'#rename': function() {},
+		'#rename': function() {
+			var column   = menu.data('column');
+			var resource = menu.data('resources')[0];
+
+			var displayName = prompt(resource.displayName);
+
+			console.log(displayName);
+		},
 		'#get-info': function() {
 			// emit PROPFINDs
 		}
@@ -379,6 +386,7 @@ jQuery(function($) {
 			menu.addClass('resources');
 		}
 	});
+
 	doc.click(function(e) {
 		if (e.which !== 3) menu.menu().deactivate();
 	});

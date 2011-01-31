@@ -1,41 +1,33 @@
 (function($) {
 	function Menu($$) {
-
-		this.deactivate = function deactivate() {
-			$$.removeClass('active');
-			$$.trigger('deactivate');
-			return $$;
-		};
+		$$.data('menu', this);
 
 		this.activate = function activate() {
-			$$.addClass('active');
-			$$.trigger('activate');
-			return $$;
+			return $$.addClass('active').trigger('activate');
 		};
-
-		$$.data('menu', this);
+		this.deactivate = function deactivate() {
+			return $$.removeClass('active').trigger('deactivate');
+		};
 
 		return this;
 	}
 
-	$.fn.menu = function menu(handler) {
-		var $$   = this;
-		var menu = $$.data('menu');
+	$.fn['menu'] = function(handler) {
+		var menu = this.data('menu');
+		if (menu) { return menu; }
 
-		if (typeof menu === 'undefined') {
-			menu = new Menu($$);
-		} else {
-			return menu;
-		}
+		return this.each(function() {
+			var $$ = $(this);
 
-		return this.click(function(e) {
-			var self = this;
-			var handling;
-			$.each(handler, function(selector) {
-				handling = $(e.target).is(selector);
-				if (handling) this.call(self);
-				return !handling;
+			$$.click(function(e) {
+				var et = $(e.target);
+
+				$.each(handler, function(css) {
+					if (et.is(css)) { this.call($$); }
+				});
 			});
+
+			new Menu($$);
 		});
 	};
 
