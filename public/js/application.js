@@ -174,7 +174,7 @@ jQuery(function($) {
 		click(function(e) {
 			e.preventDefault();
 
-			var rows     = tbody.children('tr');
+			var rows     = tbody.children();
 			var row      = rows.has(e.target);
 			var index    = rows.index(row);
 			var selected = row.hasClass('selected');
@@ -222,7 +222,7 @@ jQuery(function($) {
 		dblclick(function(e) {
 			var isAnchor = e.target.tagName === 'A';
 			if (isAnchor) { 
-				var rows     = tbody.children('tr');
+				var rows     = tbody.children();
 				var row      = rows.has(e.target);
 				var index    = rows.index(row);
 				var type     = resources[index].contentType;
