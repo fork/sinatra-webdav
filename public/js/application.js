@@ -384,11 +384,6 @@ jQuery(function($) {
 		'#get-info': function() {
 			// emit PROPFINDs
 		}
-		//'#make-directory': function() {},
-		//'#logout': function() {
-		//	sure = confirm('Are you sure?');
-		//	if (sure) location.href = '/auth/logout';
-		//}
 	}).bind('activate', function() {
 		var resources = menu.data('resources');
 		var singular  = resources.length === 1;
