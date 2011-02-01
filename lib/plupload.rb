@@ -1,7 +1,7 @@
 class PLUpload < Struct.new(:name, :chunks, :index, :source)
 
   Success = Class.new(String) { def ok?; true end }
-  SUCCEEDED = Success.new '{"jsonrpc" : "2.0", "result" : null, "id" : "id"}'
+  SUCCEEDED = Success.new '{"jsonrpc" : "2.0", "result" : "Created", "id" : "id"}'
 
   Failure = Class.new(String) { def ok?; false end }
   FAILED = Failure.new '{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input or output stream."}, "id" : "id"}'
