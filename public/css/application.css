@@ -24,15 +24,15 @@ body.double {
 	position: absolute !important;
 	top: 0;
 	bottom: 1.4em;
-	opacity: 0.75;
-	-moz-opacity: 0.75;
-	filter:alpha(opacity=75);
 	min-width: 480px;
 	width: 100%;
+	-moz-opacity: 0.75;
+	     opacity: 0.75;
+	filter:alpha(opacity=75);
 }
 .focus {
-	opacity: 1;
 	-moz-opacity: 1;
+	     opacity: 1;
 	filter:alpha(opacity=100);
 }
 
@@ -58,9 +58,9 @@ body.double {
 }
 
 .shadow {
-  -moz-box-shadow: 0 0 3px darkslategrey;
-  -webkit-box-shadow: 0 0 3px darkslategrey;
-  box-shadow: 0 0 3px darkslategrey;
+	-webkit-box-shadow: 0 0 3px darkslategrey;
+	   -moz-box-shadow: 0 0 3px darkslategrey;
+	        box-shadow: 0 0 3px darkslategrey;
 }
 
 #context-menu {
