@@ -20,7 +20,7 @@ class PLUpload < Struct.new(:name, :chunks, :index, :source)
     name   = params['name']
     index  = params['chunk'].to_i
     chunks = params['chunks'].to_i
-    source = params[:file][:tempfile]
+    source = params['file'][:tempfile]
 
     instance = new name, chunks, index, source
     instance.process { |io| yield io }
