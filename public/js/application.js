@@ -273,6 +273,68 @@ jQuery(function($) {
 			one('deactivate', function() { rows.removeClass('active'); }).
 			menu().activate();
 		});
+
+		var uploader = new plupload.Uploader({
+			container: column.attr('id') + '-plupload',
+			runtimes: 'html5, html4',
+			drop_element: column.attr('id')
+		});
+		//uploader.bind('Error', function(up, err) {
+		//	//console.log('error');
+		//});
+		//uploader.bind('Init', function(up, res) {
+		//	//console.log('init: ' + column.attr('id'));
+		//});
+		//uploader.bind('StateChanged', function() {
+		//	//console.log('state-changed');
+		//});
+		uploader.bind('FileUploaded', function(up, file) {
+			var message = file.href + file.name;
+			var now = new Date();
+
+			if (file.status === plupload.DONE) {
+				log.POST(message + ' => Created', now);
+
+				if (file.href === root.href) {
+					var resource;
+
+					$.each(resources, function() {
+						if (this.displayName === file.name) {
+							resource = this;
+							return false;
+						}
+					});
+
+					if (resource) {
+						resource.lastModified = now;
+						resource.contentLength = file.size;
+					} else {
+						resource = $.extend({}, root, {
+							contentLength: file.size,
+							displayName: file.name,
+							href: file.href + file.name,
+							lastModified: now
+						});
+
+						resources.push(resource);
+					}
+
+					column.trigger('sort');
+				}
+			} else {
+				log.POST(message + ' => Conflict', now);
+			}
+		});
+		uploader.bind('FilesAdded', function(up, files) {
+			//console.log('files-added');
+			up.settings.url = root.href;
+			$.each(files, function() { this.href = root.href; });
+		});
+		uploader.bind('QueueChanged', function(up) {
+			//console.log('queue-changed');
+			up.start();
+		});
+		uploader.init();
 	});
 
 	// moves menu to another position if it'd overflow the window limits
@@ -532,18 +594,27 @@ jQuery(function($) {
 	});
 
 	var log = $('#log').
-	ajaxSend(function(e, xhr, opts) {
-		var text = '';
-		text += new Date().valueOf();
-		text += [':', opts.type, opts.url].join(' ');
-
-		var line = $('<div>').addClass(opts.type.toLowerCase()).html(text);
-		log.prepend(line);
+	//ajaxSend(function(e, xhr, opts) {
+	//	console.log(xhr);
+	//}).
+	ajaxComplete(function(e, xhr, opts) {
+		log[opts.type](opts.url + ' => ' + xhr.statusText);
 	}).
 	dblclick(function() {
 		log.toggleClass('minimized');
 	}).
 	mousedown(function(e) { e.preventDefault(); });
+
+	log.push = function(method, message, now) {
+		now     = now || new Date();
+		message = now.valueOf() + ': ' + method.toUpperCase() + ' ' + message;
+		$('<div>').addClass(method).html(message).prependTo(this);
+	};
+	log.POST = function(msg, now) { this.push('post', msg, now); };
+	log.DELETE = function(msg, now) { this.push('delete', msg, now); };
+	log.COPY = function(msg, now) { this.push('copy', msg, now); };
+	log.MOVE = function(msg, now) { this.push('move', msg, now); };
+	log.PROPFIND = function(msg, now) { this.push('propfind', msg, now); };
 
 	win.trigger('hashchange');
 });
