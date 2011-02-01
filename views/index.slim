@@ -29,7 +29,7 @@ body#container.single
       .expander
         a title="Enter two-column mode."
           img.hover src="/images/expand-hover.png"
-          img src="/images/expand-normal.png"
+          img src="/images/expand.png"
 
   form#second.column.hidden
     .margin
@@ -50,9 +50,10 @@ body#container.single
       .typeSelect
         label Showing: All Files
         select multiple="multiple"
+        input.pattern type="text"
       .expander
         a title="Leave two-column mode."
-          img src="/images/collapse-normal.png"
+          img src="/images/collapse.png"
           img.hover src="/images/collapse-hover.png"
 
   ul#context-menu.shadow
@@ -81,7 +82,9 @@ body#container.single
 
 
   #log.minimized
-
+  a#logout href="/auth/logout" title="Logout"
+    img src="/images/logout.png"
+    img.hover src="/images/logout-hover.png"
 
 script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"
 script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"

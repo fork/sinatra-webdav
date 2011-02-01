@@ -149,6 +149,21 @@ a:hover img.hover {
 	overflow: hidden;
 	height: 1.4em;
 }
+#logout {
+	position: absolute;
+	bottom: 0;
+	height: 24px;
+	right: 0;
+	width: 24px;
+}
+#logout .hover,
+#logout:hover img {
+	display: none;
+}
+#logout img,
+#logout:hover .hover {
+	display: block;
+}
 
 .breadcrumb {
 	cursor: pointer;
