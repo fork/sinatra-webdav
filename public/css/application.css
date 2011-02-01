@@ -200,7 +200,8 @@ a:hover img.hover {
 .typeSelect label {
 	cursor: pointer;
 }
-.typeSelect select {
+.typeSelect select,
+.typeSelect input {
 	display: none;
 	font-size: 12px;
 	border: none;
@@ -211,6 +212,7 @@ a:hover img.hover {
 	font-family: Helvetica, sans-serif;
 	font-style: normal;
 }
+.typeSelect.active input,
 .typeSelect.active select {
 	display: block;
 }

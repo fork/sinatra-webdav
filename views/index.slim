@@ -26,6 +26,7 @@ body#container.single
       .typeSelect
         label Showing: All Files
         select multiple="multiple"
+        input.pattern type="text"
       .expander
         a title="Enter two-column mode."
           img.hover src="/images/expand-hover.png"
@@ -80,8 +81,8 @@ body#container.single
     li.resource
       a#clipboard Copy Path
 
-
   #log.minimized
+
   a#logout href="/auth/logout" title="Logout"
     img src="/images/logout.png"
     img.hover src="/images/logout-hover.png"

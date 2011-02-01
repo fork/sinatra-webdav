@@ -279,15 +279,9 @@ jQuery(function($) {
 			runtimes: 'html5, html4',
 			drop_element: column.attr('id')
 		});
-		//uploader.bind('Error', function(up, err) {
-		//	//console.log('error');
-		//});
-		//uploader.bind('Init', function(up, res) {
-		//	//console.log('init: ' + column.attr('id'));
-		//});
-		//uploader.bind('StateChanged', function() {
-		//	//console.log('state-changed');
-		//});
+		//uploader.bind('Error', function(up, err) { console.log('error'); });
+		//uploader.bind('Init', function(up, res) { console.log('init'); });
+		//uploader.bind('StateChanged', function() { console.log('state-changed'); });
 		uploader.bind('FileUploaded', function(up, file) {
 			var message = file.href + file.name;
 			var now = new Date();
@@ -299,18 +293,20 @@ jQuery(function($) {
 					var resource;
 
 					$.each(resources, function() {
-						if (this.displayName === file.name) {
-							resource = this;
-							return false;
-						}
+						if (this.displayName === file.name) { resource = this; }
+						return !!resource;
 					});
 
 					if (resource) {
 						resource.lastModified = now;
 						resource.contentLength = file.size;
 					} else {
+						var extname = file.name.replace(/^.+\.([^.]+)/, '$1');
+						var type = plupload.mimeTypes[extname];
+
 						resource = $.extend({}, root, {
 							contentLength: file.size,
+							contentType: type || 'application/octet-stream',
 							displayName: file.name,
 							href: file.href + file.name,
 							lastModified: now
@@ -332,7 +328,7 @@ jQuery(function($) {
 		});
 		uploader.bind('QueueChanged', function(up) {
 			//console.log('queue-changed');
-			up.start();
+			if (up.state !== plupload.STARTED) { up.start(); }
 		});
 		uploader.init();
 	});
