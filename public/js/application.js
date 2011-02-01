@@ -100,19 +100,19 @@ jQuery(function($) {
 	function refresh(root, resources) {
 		var select, tbody;
 
-		select = this.find('.typeSelect select').empty();
+		select = this.find('.type-select select').empty();
 		$.each(optionsForTypeSelect(resources), function() {
 			select.append(this);
 		});
 		select.change();
 
-		breadcrumb = this.find('.breadcrumb').empty();
+		breadcrumb = this.find('.location select').empty();
 		$.each(optionsForBreadcrumb(root), function() {
 			breadcrumb.append(this);
 		});
 	}
 
-	$('.breadcrumb').change(function() {
+	$('.location select').change(function() {
 		$(this).parents('.column').click();
 		var url = $(this).val();
 		$.bbq.pushState({ url: url });
@@ -419,8 +419,7 @@ jQuery(function($) {
 			var resource = menu.data('resources')[0];
 			var all      = column.data('resources');
 
-			var displayName = prompt('Enter new filename:', resource.displayName);
-
+			var displayName = prompt('Enter Filename:', resource.displayName);
 			if (displayName) {
 				var href = decodeURIComponent(resource.parent().href);
 				href += displayName;
@@ -468,7 +467,7 @@ jQuery(function($) {
 	mouseover(function() { clipboard.addClass('hover'); }).
 	mouseout(function() { clipboard.removeClass('hover'); });
 
-	$('.typeSelect').each(function() {
+	$('.type-select').each(function() {
 		var $$ = $(this);
 
 		doc.click(function() { $$.removeClass('active'); });
@@ -534,6 +533,9 @@ jQuery(function($) {
 			}
 			e.stopPropagation();
 		});
+		$$.find('input').click(function(e) {
+			e.stopPropagation();
+		});
 	});
 
 	$('.expander').click(function(e) {
@@ -589,7 +591,7 @@ jQuery(function($) {
 		});
 	});
 
-	var log = $('#log').
+	var log = $('#transcript').
 	//ajaxSend(function(e, xhr, opts) {
 	//	console.log(xhr);
 	//}).

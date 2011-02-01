@@ -22,10 +22,14 @@ body#container.single
               th.type
                 a href="#contentType" Type
           tbody
-      select.breadcrumb
-      .typeSelect
-        label Showing: All Files
-        select multiple="multiple"
+      .location
+        select
+        .make-collection
+        .upload
+          #first-plupload
+      .type-select
+        label for="first-select" Showing: All Files
+        select#first-select multiple="multiple"
         input.pattern type="text"
       .expander
         a title="Enter two-column mode."
@@ -47,10 +51,14 @@ body#container.single
               th.type
                 a href="#contentType" Type
           tbody
-      select.breadcrumb
-      .typeSelect
-        label Showing: All Files
-        select multiple="multiple"
+      .location
+        select
+        .make-collection
+        .upload
+          #second-plupload
+      .type-select
+        label for="second-select" Showing: All Files
+        select#second-select multiple="multiple"
         input.pattern type="text"
       .expander
         a title="Leave two-column mode."
@@ -81,7 +89,7 @@ body#container.single
     li.resource
       a#clipboard Copy Path
 
-  #log.minimized
+  #transcript.minimized
 
   a#logout href="/auth/logout" title="Logout"
     img src="/images/logout.png"

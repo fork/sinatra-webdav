@@ -36,14 +36,10 @@ body.double {
 	filter:alpha(opacity=100);
 }
 
-.column .margin {
-	left: 0;
-	right: 0;
-}
-#first {
+#first, .column .margin {
 	left: 0;
 }
-#second {
+#second, .column .margin {
 	right: 0;
 }
 .half {
@@ -132,11 +128,12 @@ a img.hover,
 a:hover img {
 	display: none;
 }
+a img,
 a:hover img.hover {
 	display: block;
 }
 
-#log {
+#transcript {
 	background-color: white;
 	font-family: Monaco, monospace;
 	position: fixed;
@@ -146,10 +143,11 @@ a:hover img.hover {
 	max-height: 13%;
 	width: 100%;
 }
-#log.minimized {
+#transcript.minimized {
 	overflow: hidden;
 	height: 1.4em;
 }
+
 #logout {
 	position: absolute;
 	bottom: 0;
@@ -157,38 +155,24 @@ a:hover img.hover {
 	right: 0;
 	width: 24px;
 }
-#logout .hover,
-#logout:hover img {
-	display: none;
-}
-#logout img,
-#logout:hover .hover {
-	display: block;
-}
 
-.breadcrumb {
+.location select {
 	cursor: pointer;
 	outline: 0;
 	font-family: Helvetica, sans-serif;
 	font-size: 12px;
-	border: none;
-	-moz-appearance: none;
-	-webkit-appearance: none;
-	border-radius: 0;
 	letter-spacing: 1px;
 	margin: 0;
-	line-height: 13px;
-	padding: 3px 0 3px 5px;
 	position: absolute;
 	top: 0;
 	min-width: 200px;
 	height: 20px;
 }
-.breadcrumb option {
+.location select option {
 	padding: 2px 5px;
 }
 
-.typeSelect {
+.type-select {
 	background-color: white;
 	position: absolute;
 	letter-spacing: 1px;
@@ -198,23 +182,31 @@ a:hover img.hover {
 	min-width: 200px;
 	min-height: 14px;
 }
-.typeSelect label {
+.type-select label {
 	cursor: pointer;
 }
-.typeSelect select,
-.typeSelect input {
+.type-select select {
+	border: none;
+	margin: 2px 0 21px 0;
+	width: 100%;
+}
+.type-select input {
+	position: absolute;
+	bottom: 4px;
+	right: 4px;
+	left: 4px;
+}
+.type-select select,
+.type-select input {
 	display: none;
 	font-size: 12px;
-	border: none;
-	width: 100%;
-	margin: 2px 0;
 }
-.typeSelect optgroup {
+.type-select optgroup {
 	font-family: Helvetica, sans-serif;
 	font-style: normal;
 }
-.typeSelect.active input,
-.typeSelect.active select {
+.type-select.active input,
+.type-select.active select {
 	display: block;
 }
 
