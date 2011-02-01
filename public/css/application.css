@@ -20,7 +20,8 @@ body.double {
 }
 .column {
 	background-color: plum;
-	position: absolute;
+	/* make position !important because PLUpload goes relative in Safari... */
+	position: absolute !important;
 	top: 0;
 	bottom: 1.4em;
 	opacity: 0.75;
