@@ -252,7 +252,7 @@ jQuery(function($) {
 
 			if (selected.has(e.target).length > 0) {
 				// selected are clicked
-				selected.each(function() {
+				selected.filter(':visible').each(function() {
 					var index = rows.index(this);
 					context.push(resources[index]);
 				}).addClass('active');
@@ -276,7 +276,7 @@ jQuery(function($) {
 
 		var uploader = new plupload.Uploader({
 			container: column.attr('id') + '-plupload',
-			runtimes: 'html5, html4',
+			runtimes: 'html5,html4',
 			drop_element: column.attr('id')
 		});
 		//uploader.bind('Error', function(up, err) { console.log('error'); });
