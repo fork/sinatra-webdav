@@ -86,10 +86,11 @@ class Application < WebDAV::Base
 
   # support PLUploads...
   post '*' do
-    conflict unless resource.parent.exist?
+    conflict unless resource.exist?
+    destination = resource.join params[:name]
 
     # RADAR Chrome generates strange filenames...
-    response = PLUpload.process(params) { |io| resource.put io }
+    response = PLUpload.process(params) { |io| destination.put io }
 
     headers no_cache
     headers 'Content-type' => 'application/json; charset=UTF-8'
