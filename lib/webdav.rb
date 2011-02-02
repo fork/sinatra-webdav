@@ -1,7 +1,11 @@
+require 'addressable/uri'
+require 'nokogiri'
+require 'sinatra/base'
+
 module WebDAV
 end
 
-root = File.dirname __FILE__
+root = File.expand_path '..', __FILE__
 require "#{ root }/dav"
 require "#{ root }/webdav/verbs"
 require "#{ root }/webdav/statuses"
