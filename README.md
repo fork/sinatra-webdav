@@ -1,7 +1,7 @@
 # Sinatra based WebDAV implementation
 
 For an example application using OmniAuth and the FileBackend see
-[dullahan](http://github.com/fork/farmfacts/master/dullahan/).
+[dullahan](https://github.com/fork/farmfacts/tree/master/dullahan).
 
 ## Setup
 
@@ -44,14 +44,10 @@ This extracts litmus, configures, compiles and runs it.
 
 ## TODO
 
-* PLUpload in filemanager (fine tuning)
-* second column in filemanager (needs synchronization)
-* context menus in filemanager (copy, move, ...)
-* bookmarks in filemanager
-* implement LOCK and UNLOCK
-* write unit tests for file backend
-* implement ACL
 * redis based property management
+* implement LOCK and UNLOCK
+* implement ACL
+* write unit tests for file backend
 * write documentation
 * implement DeltaV
 * test different setups (thin, unicorn, ...)
