@@ -1,11 +1,11 @@
-require 'rubygems'
-require 'bundler/setup'
+require 'teststrap'
 
-require File.expand_path('../../lib/webdav', __FILE__)
-Bundler.require :test
-
-context 'WebDAV' do
+context "sinatra-webdav" do
 
   setup { Rack::Test::Session.new Rack::MockSession.new(WebDAV) }
+
+  asserts "i'm a failure :(" do
+    topic
+  end
 
 end
