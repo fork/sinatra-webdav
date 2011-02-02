@@ -1,8 +1,7 @@
 # Sinatra based WebDAV implementation
 
 For an example application using OmniAuth and the FileBackend see
-https://github.com/fork/farmfacts-dullahan in this directory.
-It comes with a JavaScript based file manager.
+[dullahan](http://github.com/fork/farmfacts/master/dullahan/).
 
 ## Setup
 
@@ -14,25 +13,33 @@ We use NGINX and Phusion Passenger for deployment but you are free to choose
 any other Rack compatible webserver.
 
 
-## Warnings
+## Warning!
 
-If you statically serve files from a directory with nginx, apache, etc... do
-not point the file backend resource to this directory!
+If you serve files statically with nginx, apache, etc... don't make their
+location the document root.
+If you need them to be served statically instead use another server instance
+w/o sinatra-webdav or enable X-Sendfile.
 
 
 ## Requirements
 
-* Ruby 1.9.2+
+Ruby 1.9.2
 
-litmus - WebDAV test suite runs on Linux, Solaris, FreeBSD, CygWin, and many
-other Unix systems. On OS X you need XCode.
 
-To run the litmus test suite you need to start the server in the test
-directory. Then run:
+## Development
 
-    $ test/litmus_test.rb
+We choose the litmus testing suite for the time being. It runs on Linux,
+Solaris, FreeBSD, CygWin, and many other Unix systems.
 
-This extracts litmus, configures, compiles and runs the test suite.
+You need a working build system (autoconf, make, ...).
+
+To run the litmus test suite:
+
+    1. $ cd test
+    2. $ passenger start -d
+    3. $ ./litmus_test.rb
+
+This extracts litmus, configures, compiles and runs it.
 
 
 ## TODO
