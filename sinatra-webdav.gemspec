@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Fork Unstable Media GmbH", "Florian Aßmann"]
-  s.date = %q{2011-02-02}
+  s.date = %q{2011-02-09}
   s.description = %q{Sinatra based WebDAV server implementation.}
   s.email = %q{src@fork.de}
   s.extra_rdoc_files = [
@@ -30,13 +30,13 @@ Gem::Specification.new do |s|
     "lib/dav/properties.rb",
     "lib/dav/resource.rb",
     "lib/sinatra-webdav.rb",
-    "lib/sinatra/templates/slim.rb",
     "lib/webdav.rb",
     "lib/webdav/base.rb",
     "lib/webdav/convenience.rb",
     "lib/webdav/statuses.rb",
     "lib/webdav/verbs.rb",
     "log/.gitignore",
+    "sinatra-webdav.gemspec",
     "test/.gitignore",
     "test/config.ru",
     "test/litmus-0.12.1.tar.gz",
@@ -60,18 +60,18 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<sinatra>, [">= 0"])
-      s.add_runtime_dependency(%q<nokogiri>, [">= 0"])
       s.add_runtime_dependency(%q<addressable>, [">= 0"])
+      s.add_runtime_dependency(%q<nokogiri>, [">= 0"])
+      s.add_runtime_dependency(%q<sinatra>, [">= 0"])
       s.add_development_dependency(%q<rack-test>, [">= 0"])
       s.add_development_dependency(%q<riot>, [">= 0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.5.2"])
       s.add_development_dependency(%q<rcov>, [">= 0"])
     else
-      s.add_dependency(%q<sinatra>, [">= 0"])
-      s.add_dependency(%q<nokogiri>, [">= 0"])
       s.add_dependency(%q<addressable>, [">= 0"])
+      s.add_dependency(%q<nokogiri>, [">= 0"])
+      s.add_dependency(%q<sinatra>, [">= 0"])
       s.add_dependency(%q<rack-test>, [">= 0"])
       s.add_dependency(%q<riot>, [">= 0"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -79,9 +79,9 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rcov>, [">= 0"])
     end
   else
-    s.add_dependency(%q<sinatra>, [">= 0"])
-    s.add_dependency(%q<nokogiri>, [">= 0"])
     s.add_dependency(%q<addressable>, [">= 0"])
+    s.add_dependency(%q<nokogiri>, [">= 0"])
+    s.add_dependency(%q<sinatra>, [">= 0"])
     s.add_dependency(%q<rack-test>, [">= 0"])
     s.add_dependency(%q<riot>, [">= 0"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
