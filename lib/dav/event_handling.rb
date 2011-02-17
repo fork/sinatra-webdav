@@ -34,7 +34,7 @@ module DAV
           def self.matches?(uri)
             File.fnmatch? matcher, uri.path
           end
-        elsif matches.is_a? Regexp
+        elsif matcher.is_a? Regexp
           def self.matches?(uri)
             matcher =~ uri.path
           end
