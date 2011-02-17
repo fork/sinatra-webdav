@@ -21,34 +21,58 @@ module DAV
 
   module EventHandling
 
-    class Handler < Struct.new(:pattern_or_expression, :unit)
-      def matches?(uri)
-        case pattern_or_expression
-        when String then File.fnmatch? pattern_or_expression, uri.path
-        when Regexp then pattern_or_expression =~ uri.path
+    class Filter < Struct.new(:matcher, :unit)
+
+      def initialize(*args)
+        super(*args)
+
+        if matcher.respond_to? :matches?
+          def self.matches?(uri)
+            matcher.matches? uri
+          end
+        elsif matcher.is_a? String
+          def self.matches?(uri)
+            File.fnmatch? matcher, uri.path
+          end
+        elsif matches.is_a? Regexp
+          def self.matches?(uri)
+            matcher =~ uri.path
+          end
         end
       end
+
+      def matches?(uri)
+        true
+      end
+
       def call(resource)
         unit.call resource if matches? resource.uri
       end
+
     end
 
     module ClassMethods
       attr_accessor :event_manager
 
       def before(method_sym, pattern, unit = nil)
-        unit.respond_to? :call or
-        unit = Symbol === unit ? method(unit) : Proc.new
+        unit, pattern = pattern unless String === pattern or Regexp === pattern
 
-        event_manager.before method_sym, Handler.new(pattern, unit)
+        unless unit.respond_to? :call
+          unit = Symbol === unit ? method(unit) : Proc.new
+        end
+
+        event_manager.before method_sym, Filter.new(pattern, unit)
 
         self
       end
       def after(method_sym, pattern, unit = nil)
-        unit.respond_to? :call or
-        unit = Symbol === unit ? method(unit) : Proc.new
+        unit, pattern = pattern unless String === pattern or Regexp === pattern
 
-        event_manager.after method_sym, Handler.new(pattern, unit)
+        unless unit.respond_to? :call
+          unit = Symbol === unit ? method(unit) : Proc.new
+        end
+
+        event_manager.after method_sym, Filter.new(pattern, unit)
 
         self
       end
@@ -63,13 +87,13 @@ module DAV
     protected
 
       def around(method)
-        resource.event_manager[method].before.
-        each { |handler| handler.call self }
+        return false if resource.event_manager[method].before.
+                        any? { |handler| handler.call(self) === false }
 
-        result = yield
+        return false unless result = yield
 
-        resource.event_manager[method].after.
-        each { |handler| handler.call self }
+        return false if resource.event_manager[method].after.
+                        any? { |handler| handler.call(self) === false }
 
         result
       end

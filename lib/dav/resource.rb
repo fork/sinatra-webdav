@@ -11,7 +11,7 @@ module DAV
     end
 
     %w[ get put mkcol delete copy move ].each do |method|
-      before method.to_sym, '*', LogMethod.new(method.upcase)
+      before method.to_sym, LogMethod.new(method.upcase)
     end if $-d
 
     extend Module.new { attr_reader :backend }
