@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{sinatra-webdav}
-  s.version = "0.0.3"
+  s.version = "0.0.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Fork Unstable Media GmbH", "Florian Aßmann"]
@@ -39,6 +39,7 @@ Gem::Specification.new do |s|
     "sinatra-webdav.gemspec",
     "test/.gitignore",
     "test/config.ru",
+    "test/event_handling_test.rb",
     "test/litmus-0.12.1.tar.gz",
     "test/litmus_test.rb",
     "test/properties_test.rb",
@@ -52,6 +53,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.5.0}
   s.summary = %q{Sinatra based WebDAV server implementation.}
   s.test_files = [
+    "test/event_handling_test.rb",
     "test/litmus_test.rb",
     "test/properties_test.rb",
     "test/teststrap.rb",
