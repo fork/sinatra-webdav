@@ -9,7 +9,10 @@ module WebDAV::Statuses
   def no_content(*args)
     halt 204, *args
   end
-  def multi_status(*args)
+  def multi_status(responder, *args)
+    content_type 'application/xml'
+    body responder.to_xml
+    
     halt 207, *args
   end
   def bad_request(*args)

@@ -12,7 +12,7 @@ ensure
   Dir.chdir working_directory
 end
 
-enter File.expand_path('..', __FILE__) do |root|
+enter File.expand_path('../..', __FILE__) do |root|
 
   # try to restart passenger
   pid_file = root.join 'tmp', 'pids', "passenger.#{ PORT }.pid"

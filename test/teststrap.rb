@@ -10,14 +10,81 @@ end
 require 'riot'
 require File.expand_path('../../lib/sinatra-webdav', __FILE__)
 
+module Example
+  ROOT = File.expand_path '../examples', __FILE__
+  def self.open(basename)
+    File.open File.join(ROOT, "#{ basename }.xml") do |file|
+      yield file
+    end
+  end
+end
+
+module PropertyReader
+  def length
+    value = at_css('getcontentlength').text
+    value.strip!
+
+    Integer value
+  end
+  def type
+    value = at_css('getcontenttype').text
+    value.strip!
+
+    value
+  end
+  def collection?
+    not css('resourcetype collection').empty?
+  end
+end
+
 require 'riot'
 class Riot::Situation
 
   def app; @app; end
   include Rack::Test::Methods
+  include Addressable
 
   extend Forwardable
   def_delegators :current_session, :env_for, :process_request
+
+  def multi
+    xml = Nokogiri::XML last_response.body
+    xml.decorators(Nokogiri::XML::Node) << PropertyReader
+
+    responses = xml.css 'response'
+
+    responses.each do |response|
+      yield response
+    end if block_given?
+
+    responses
+  end
+
+  count = 0
+  COUNTER = -> { count += 1; count - 1 }
+
+  def count
+    COUNTER.call
+  end
+
+  def temporary_path(*args)
+    opts = Hash === args.last ? args.pop : {}
+
+    parent = opts[:parent] || '/'
+    parent << '/' unless parent =~ %r'/$'
+
+    path = "#{ parent }#{ opts[:basename] || 'test' }#{ count }"
+    path << '/' if opts[:collection]
+
+    if block_given?
+      result = yield path
+      delete path
+
+      return result
+    else
+      path
+    end
+  end
 
   def copy(uri, params = {}, env = {}, &block)
     env = env_for(uri, env.merge(:method => "COPY", :params => params))

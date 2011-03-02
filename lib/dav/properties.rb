@@ -1,211 +1,297 @@
 module DAV
-  class Properties < Struct.new(:document, :path, :resource)
-    # FIXME this must be configured by Application
-    ROOT = File.join Dir.getwd, 'properties', 'group_files'
-    
-    def self.XML(resource)
-      prop_path = File.join "#{ ROOT }#{ resource.uri.path }".split('/')
-      
-      doc = File.file?(prop_path) ? File.read(prop_path) : '<properties/>'
-      new Nokogiri::XML(doc), prop_path, resource
+  class Properties < Struct.new(:resource_id, :document)
+    extend PropertyAccessors
+    include DAV
+
+    BLANK = <<-XML
+<?xml version="1.0" encoding="utf-8" ?>
+<D:prop xmlns:D="DAV:">
+  <D:creationdate/>
+  <D:displayname/>
+  <D:getcontentlanguage/>
+  <D:getcontentlength/>
+  <D:getcontenttype/>
+  <D:getetag/>
+  <D:getlastmodified/>
+  <D:lockdiscovery/>
+  <D:resourcetype/>
+  <D:supportedlock/>
+  <D:getlastmodified/>
+</D:prop>
+XML
+
+    # list of protected properties grouped by namespace href
+    PROTECTED = Hash.new { |mem, ns| mem[ns] = [] }
+    PROTECTED['DAV:'] = %w[
+      displayname
+      getcontentlanguage
+      getcontentlength
+      getcontenttype
+      getetag
+      getlastmodified
+      lockdiscovery
+      resourcetype
+      supportedlock
+    ]
+
+    # raises when patch tries to modify a protected property
+    class PropertyProtected < DAV::Error
+      def initialize
+        super 'cannot-modify-protected-property'
+      end
+    end
+    class NullNamespace < DAV::Error
+      def initialize
+        super ''
+      end
     end
 
-    def to_xml(xml, depth)
-      prop = xml.at_css("propfind prop")
+    property :creation_date => :creationdate,
+             :last_modified => :getlastmodified do
 
-      construct = Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |builder|
-        builder.multistatus('xmlns' => "DAV:") do
-          for r in find_resources(depth)
-            builder.response do
-              builder.href r.uri
-              builder.propstat do
-                builder.prop do
-                  if prop
-                    builder << r.properties.find(prop.element_children)
-                  else
-                    builder << r.properties.all
-                  end
+      reader { |node| str = node.content; str.empty?? nil : Time.parse(str) }
+      writer { |node, time| node.content = time.httpdate }
+    end
+
+    property :display_name     => :displayname,
+             :content_language => :getcontentlanguage,
+             :content_type     => :getcontenttype,
+             :entity_tag       => :getetag
+
+    property :content_length => :getcontentlength do
+      reader { |node| Integer node.content }
+      writer { |node, value| node.content = value }
+    end
+
+    property :lock_discovery => :lockdiscovery do
+      #reader {|*|}
+      #writer {|*|}
+    end
+
+    property :resource_type => :resourcetype do
+      reader do |node|
+        node.css('*').map { |n| n.name }.join unless node.children.empty?
+      end
+      writer do |node, value|
+        node.children.remove
+        node.add_child node.document.create_element(value) unless value.nil?
+      end
+    end
+
+    property :supported_lock => :supportedlock do
+      #reader {|*|}
+      #writer {|*|}
+    end
+
+    def self.children_by_names(names)
+      names = names.map { |name| "self::D:#{ name }" }.join ' or '
+      "child::*[#{ names }]"
+    end
+
+    def initialize(resource)
+      data     = property_storage.get(resource.id) || BLANK
+      document = Nokogiri::XML data
+
+      @query = "/D:prop/D:%s"
+
+      super resource.id, document
+    end
+
+    # Renders the document.
+    def to_xml
+      document.root.to_xml
+    end
+
+    # Copies the document to destinated properties objects.
+    def copy(destination)
+      destination.document = document.clone
+    end
+
+    def patch(request, response)
+      request.rewind
+      request = Nokogiri::XML request.read
+
+      properties = Hash.new { |mem, modifier| mem[modifier] = [] }
+      protected_properties, conflicting_properties = [], []
+
+      response.precondition do |condition|
+        unless request.root
+          condition.unprocessable_entity!
+        else
+          request.root.elements.each do |modifier|
+            if %w[ set remove ].include? modifier.name
+              modifier.css('D|prop > *', 'D' => 'DAV:').each do |property|
+                begin
+                  protect! property
+                  properties[modifier] << property
+
+                # TODO Be more generic here so we can add custom behaviour
+                #      (like Access Control, ...) to Properties#protect!
+                #      method.
+                rescue PropertyProtected => e
+                  protected_properties << property
+                  condition.forbidden! e.message if condition.ok?
                 end
               end
+            else
+              condition.conflict!
             end
           end
         end
       end
 
-      construct.to_xml
-    end
-
-    def update(properties)
-      build_properties_file!
-
-      nodes = apply properties
-
-      construct = Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |builder|
-        builder.multistatus('xmlns' => "DAV:") do
-          builder.response do
-            builder.href resource.uri
-            builder.propstat do
-              builder.prop do
-                builder << nodes[:remove]
-              end
-            end
-            builder.propstat do
-              builder.prop do
-                builder << nodes[:set]
-              end
+      response.property_status do |status|
+        if response.precondition.ok?
+          properties.each do |modifier, props|
+            props.each do |prop|
+              send modifier.name, prop
+              status.properties[200] << prop
             end
           end
-        end
-      end
-
-      File.open(path, 'w') {|f| f.write(document) }
-      construct.to_xml
-    end
-
-    def delete
-      return unless File.exist?(path)
-      if File.directory?(path)
-        Dir.delete path if Pathname(path).children.empty?
-      else
-        File.delete path
-      end
-    end
-
-    def find(props)
-      result = []
-      props.each do |p|
-        name = p.node_name
-        prop = find_with_namespace(xml_props, p)
-        unless prop
-          result << "<#{name}>#{send(name)}</#{name}>" if respond_to?(name)
         else
-          result << prop.to_xml
+          status.properties[403] = protected_properties.
+          each { |prop| prop.children.remove }
+          status.properties[409] = conflicting_properties.
+          each { |prop| prop.children.remove }
+          status.properties[424] = properties.values.flatten.
+          each { |prop| prop.children.remove }
         end
       end
-      result << resourcetype
-      result.join
+
+      response.postcondition do |status|
+        # TODO http://tools.ietf.org/html/rfc3253#section-3.12
+      end
+
+      self
+    end
+
+    ALLPROP = <<-XML
+<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:">
+  <D:allprop/>
+</D:propfind>
+XML
+
+    def find(request, response)
+      request.rewind
+      xml = request.read
+      xml = ALLPROP if xml.empty? # default: leg - wait for it - acy
+      request = Nokogiri::XML xml
+
+      nodes = document.root.elements
+      nodes.each { |n| nodes << nodes.delete(n).clone } # clone warz
+
+      response.property_status do |status|
+        request.root.css('D|prop, D|propname, D|allprop', 'D' => 'DAV:').
+        each do |selector|
+          case selector.name
+          when 'prop'
+            selector.elements.each do |e|
+              node = (namespace = e.namespace) ?
+                nodes.at("./self::P:#{ e.name }", 'P' => namespace.href) :
+                nodes.at("./self::#{ e.name }")
+
+              if node
+                status.properties[200] << node
+              else
+                status.properties[404] << e
+              end
+            end
+          when 'propname'
+            # NodeSet#each does return INT!
+            nodes.each { |n| n.children.remove }
+            status.properties[200] = nodes
+          when 'allprop'
+            status.properties[200] = nodes
+          end
+        end
+      end
+
+      self
+    end
+
+    # Compares another Properties object using the resource IDs.
+    def ==(other)
+      Properties === other and resource_id == other.resource_id
+    end
+
+    # Calls block for each property in all namespaces.
+    def each
+      if block_given?
+        document.root.elements.each do |node|
+          yield node.name, node.content
+        end
+      else
+        Enumerator.new self, :each
+      end
+    end
+
+    # Resource isn't a collection if its resourcetype property is self-closed.
+    # Therefor the property must be nil.
+    def collection?
+      not resource_type.nil?
+    end
+
+    # Stores the current xml presentation in the storage
+    def store
+      property_storage.set resource_id, to_xml
+    end
+    def delete
+      property_storage.delete resource_id
     end
 
     protected
 
-      def apply(xml)
-        ns = xml.namespaces
-        ns.delete 'xmlns'
-        set, remove, selector = [], [], ''
-
-        selector = "#{ns.keys.first.split(':').last}|" unless ns.empty?
-
-        # has to be processed in order (set overwriting same prop etc...)
-        xml.css("#{selector}propertyupdate > *").each do |child|
-          prop = child.at_css("#{selector}prop > *")
-          if child.node_name == 'set'
-            result = set(prop)
-            included = find_with_namespace(set, result)
-            set.delete(included) if included
-            set << result
-          elsif child.node_name == 'remove'
-            remove << remove(prop).to_xml
-          end
-        end
-
-        { :set => set.map {|n| n.to_xml }.join, :remove => remove.join }
+      def protect!(prop, name = prop.name, ns = prop.namespace)
+        return unless ns
+        raise PropertyProtected if PROTECTED[ns.href].include? name
       end
 
-
-      def set(node)
-        found = find_with_namespace(xml_props, node)
-        if found
-          found.replace(node)
+      def find_node(property, name = property.name, ns = property.namespace)
+#        puts "#{ name }: #{ ns.inspect }"
+        if ns
+          document.root.at_xpath "C:#{ name }", 'C' => ns.href
         else
-          xml_props.empty?? document.root.add_child(node) : xml_props.after(node)
+          document.root.at_xpath name
         end
       end
-      def remove(node)
-        found = find_with_namespace(xml_props, node)
-        found.remove if found
+
+      def set(property)
+        node = find_node property
+        node ||= document.root.add_child document.create_element(property.name)
+
+        href = property.namespace.href if property.namespace
+
+        property.namespace_scopes.each do |ns|
+          ns = node.add_namespace_definition ns.prefix, ns.href
+          node.namespace = ns if ns.href == href
+        end
+        node.children = property.children
+
+        node
+#      rescue => e
+#        puts namespaces
+#        puts e.backtrace
+#        raise
+#      ensure
+#        puts node
+      end
+      def remove(property)
+        node = find_node property
+        node.remove if node
+
         node
       end
 
-      def collection?
-        resource.collection?
+      def fetch(node_name, default = nil)
+        node = document.xpath(@query % node_name, 'D' => 'DAV:').first || default
+        block_given?? yield(node) : node if node
       end
-      def creationdate
-        stat.ctime.httpdate
-      end
-      def displayname
-        resource.display_name
-      end
-      def getlastmodified
-        stat.mtime.httpdate
-      end
-      def getetag
-        sprintf('%x-%x-%x', stat.ino, stat.size, stat.mtime.to_i)
-      end
-      def resourcetype
-        '<collection/>' if collection?
-      end
-      def getcontenttype
-        return 'directory/directory' if collection?
-        Rack::Mime.mime_type File.extname(resource.path)
-      end
-      def getcontentlength
-        stat.size
-      end
-
-      def stat
-        @stat ||= File.stat resource.path
-      end
-
-      def default_properties
-        %w[ creationdate
-            displayname
-            getlastmodified
-            getetag
-            resourcetype
-            getcontenttype
-            getcontentlength ]
-      end
-
-      def build_properties_file!
-        return if File.exist? path
-
-        FileUtils.mkpath File.dirname(path)
-        xml = '<?xml version="1.0" encoding="utf-8"?><properties/>'
-        File.open(path, 'w') {|f| f.write(xml) }
-      end
-
-      def find_with_namespace(node_array, node)
-        node_array.find {|n|
-          if n.namespace and node.namespace
-            n.name == node.name and n.namespace.href == node.namespace.href
-          else
-            n.name == node.name
-          end
-        }
-      end
-
-      def find_resources(depth)
-        case depth
-        when 0
-          [resource]
-        when 1
-          [resource] + resource.children
-        else
-          [resource] + resource.descendants
-        end
-      end
-
-      def xml_props
-        document.xpath('/properties/*')
-      end
-
-      def all
-        default = default_properties.map {|p| "<#{p}>#{send(p)}</#{p}>"}.join
-        if xml_props.empty?
-          default
-        else
-          xml_props.after(Nokogiri::XML::fragment(default)).to_xml
-        end
+      def add_property(node_name)
+        node = document.create_element("#{ node_name }", 'xmlns:D' => 'DAV')
+        document.root.add_child node
+        node.namespace = document.root.namespace
+        node
       end
 
   end

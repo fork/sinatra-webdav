@@ -25,36 +25,42 @@ class WebDAV::Base < ::Sinatra::Base
   end
 
   mkcol '*' do
-    conflict if resource != resource.parent && !resource.parent.exist?
+    conflict unless resource.parent.collection?
     not_allowed if resource.exist?
     unsupported if request.body.size > 0
 
-    resource.mkcol
+    responder = DAV::Responder.new { |r| resource.mkcol r }
 
+    headers no_cache
     ok
   end
 
   move '*' do
     not_found unless resource.exist?
-    conflict unless destination.parent.exist?
+    conflict unless resource.destination.parent.collection?
 
-    exists = destination.exist?
-    precondition_failed if exists and not overwrite?
+    exists = resource.destination.exist?
 
-    resource.move destination, depth(:except => 1, :default => DAV::Infinity)
+    # TODO move this into Resource#copy
+    precondition_failed if exists and not resource.overwrite?
 
+    responder = DAV::Responder.new { |r| resource.move r }
+
+    headers no_cache
     exists ? no_content : created
   end
 
   copy '*' do
     not_found unless resource.exist?
-    conflict unless destination.parent.exist?
+    conflict unless resource.destination.parent.collection?
 
-    exists = destination.exist?
-    precondition_failed if exists and not overwrite?
+    exists = resource.destination.exist?
+    # TODO move this into Resource#copy
+    precondition_failed if exists and not resource.overwrite?
 
-    resource.copy destination, depth(:except => 1, :default => DAV::Infinity)
+    responder = DAV::Responder.new { |r| resource.copy r }
 
+    headers no_cache
     exists ? no_content : created
   end
 
@@ -65,9 +71,9 @@ class WebDAV::Base < ::Sinatra::Base
     bad_request unless xml.errors.empty?
 
     content_type 'application/xml'
-    body resource.properties.to_xml(xml, depth(:default => DAV::Infinity))
 
-    multi_status
+    responder = DAV::Responder.new { |r| resource.propfind r }
+    multi_status responder
   end
 
   proppatch '*' do
@@ -76,36 +82,53 @@ class WebDAV::Base < ::Sinatra::Base
     xml = Nokogiri::XML request.body.read
     bad_request unless xml.errors.empty?
 
-    content_type 'application/xml'
-    body resource.properties.update(xml)
+    headers no_cache
 
-    multi_status
+    responder = DAV::Responder.new { |r| resource.proppatch r }
+    multi_status responder
   end
 
   put '*' do
-    conflict unless resource.parent.exist?
-    resource.put request.body
+    conflict unless resource.parent.collection?
+    responder = DAV::Responder.new { |r| resource.put r }
 
     created
   end
 
   delete '*' do
     not_found unless resource.exist?
-    resource.delete
 
-    ok
+    responder = DAV::Responder.new { |r| resource.delete r }
+    responder.status(resource.uri).ok?? ok : multi_status(responder)
   end
 
-  # TODO implement LOCK/UNLOCK methods
-  route('LOCK', '*') { ok }
-  route('UNLOCK', '*') { no_content }
+  # TODO implement LOCK method
+  #lock '*' do
+  #  headers no_cache
+  #  ok
+  #end
+  # TODO implement UNLOCK method
+  #unlock '*' do
+  #  headers no_cache
+  #  no_content
+  #end
 
   get '*' do
     not_found unless resource.exist?
     bad_request if resource.collection?
 
-    content_type resource.type
-    body resource.get
+    deliver_resource resource
   end
+
+  protected
+
+    # Overwrite this method if you need special GET behaviour
+    def deliver_resource(resource)
+      content_type resource.content_type
+      etag resource.entity_tag
+      last_modified resource.last_modified
+
+      body resource.body
+    end
 
 end
