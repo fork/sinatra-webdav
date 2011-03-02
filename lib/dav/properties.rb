@@ -111,47 +111,39 @@ XML
       request.rewind
       request = Nokogiri::XML request.read
 
-      properties = Hash.new { |mem, modifier| mem[modifier] = [] }
-      protected_properties, conflicting_properties = [], []
+      properties = []
+      protected_properties = []
 
       response.precondition do |condition|
-        unless request.root
-          condition.unprocessable_entity!
-        else
-          request.root.elements.each do |modifier|
-            if %w[ set remove ].include? modifier.name
-              modifier.css('D|prop > *', 'D' => 'DAV:').each do |property|
-                begin
-                  protect! property
-                  properties[modifier] << property
+        condition.unprocessable_entity! unless root = request.root
 
-                # TODO Be more generic here so we can add custom behaviour
-                #      (like Access Control, ...) to Properties#protect!
-                #      method.
-                rescue PropertyProtected => e
-                  protected_properties << property
-                  condition.forbidden! e.message if condition.ok?
-                end
-              end
+        root.elements.each do |modifier|
+          condition.conflict! if modifier.name !~ /(?:set|remove)/
+
+          method_name = modifier.name
+          modifier.css('D|prop > *', 'D' => 'DAV:').each do |property|
+            unless protected? property
+              properties << [ method_name, property ]
             else
-              condition.conflict!
+              protected_properties << property
             end
           end
+
+          protected_properties.empty? or
+          condition.forbidden! 'cannot-modify-protected-property'
         end
       end
 
       response.property_status do |status|
+
         if response.precondition.ok?
-          properties.each do |modifier, props|
-            props.each do |prop|
-              send modifier.name, prop
-              status.properties[200] << prop
-            end
+          properties.each do |(modifier, prop)|
+#            puts modifier, prop
+            send modifier, prop
+            status.properties[200] << prop
           end
         else
           status.properties[403] = protected_properties.
-          each { |prop| prop.children.remove }
-          status.properties[409] = conflicting_properties.
           each { |prop| prop.children.remove }
           status.properties[424] = properties.values.flatten.
           each { |prop| prop.children.remove }
@@ -242,9 +234,13 @@ XML
 
     protected
 
-      def protect!(prop, name = prop.name, ns = prop.namespace)
-        return unless ns
-        raise PropertyProtected if PROTECTED[ns.href].include? name
+      def protected?(prop)
+        if namespace = prop.namespace
+          PROTECTED[namespace.href].include? prop.name
+        end
+      end
+      def protect!(prop)
+        raise PropertyProtected if protected?
       end
 
       def find_node(property, name = property.name, ns = property.namespace)

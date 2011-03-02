@@ -58,7 +58,6 @@ module DAV
 
       def set_code(code, error)
         self.code = code
-        self
       end
 
   end
@@ -93,7 +92,7 @@ module DAV
 
       def set_code(code, error)
         @code, @error = code, error
-        self
+        throw :halt unless code == 200
       end
 
   end
@@ -196,6 +195,10 @@ module DAV
     end
 
     def finish
+      catch(:halt) { precondition.call if precondition }
+      catch(:halt) { status.call }
+      catch(:halt) { postcondition.call if postcondition }
+
       @hooks[:finish].each { |hook| hook.call status }
     end
 
@@ -237,11 +240,7 @@ module DAV
     end
 
     def finish
-      @responses.values.
-      each { |r| r.precondition.call if r.precondition }.
-      each { |r| r.status.call }.
-      each { |r| r.postcondition.call if r.postcondition }.
-      each { |response| response.finish }
+      @responses.values.each { |response| response.finish }
     end
 
     def to_xml
