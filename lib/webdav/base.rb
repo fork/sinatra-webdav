@@ -128,7 +128,7 @@ class WebDAV::Base < ::Sinatra::Base
       etag resource.entity_tag
       last_modified resource.last_modified
 
-      body resource.body
+      body resource.get
     end
 
 end

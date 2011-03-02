@@ -8,8 +8,12 @@ module DAV
     include Actions
     include Convenience
 
-#    include Callbacks
-#    define_callbacks :get, :propfind, :proppatch, :put, :mkcol, :delete, :lock, :unlock, :search, :copy, :move
+    alias get body
+
+    extend Callbacks
+    define_callbacks :get, :put, :mkcol, :delete, :copy, :move
+    define_callbacks :propfind, :proppatch, :lock, :unlock
+    define_callbacks :search
 
     RootRequest = Struct.new :url, :body
 
