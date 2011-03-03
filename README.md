@@ -44,10 +44,9 @@ This extracts litmus, configures, compiles and runs it.
 
 ## TODO
 
-* redis based property management
 * implement LOCK and UNLOCK
 * implement ACL
-* write unit tests for file backend
+* write unit tests for responder
 * write documentation
 * implement DeltaV
 * test different setups (thin, unicorn, ...)
