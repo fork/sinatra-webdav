@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{sinatra-webdav}
-  s.version = "0.1.0"
+  s.version = "0.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Fork Unstable Media GmbH", "Florian Aßmann"]
@@ -27,7 +27,6 @@ Gem::Specification.new do |s|
     "lib/dav.rb",
     "lib/dav/base.rb",
     "lib/dav/callbacks.rb",
-    "lib/dav/event_handling.rb",
     "lib/dav/properties.rb",
     "lib/dav/property_accessors.rb",
     "lib/dav/resource.rb",
@@ -59,7 +58,9 @@ Gem::Specification.new do |s|
     "test/unit/file_storage_test.rb",
     "test/unit/memory_storage_test.rb",
     "test/unit/properties_test.rb",
-    "test/unit/redis_storage_test.rb"
+    "test/unit/redis_storage_test.rb",
+    "test/unit/resource_test.rb",
+    "test/unit/responder_test.rb"
   ]
   s.homepage = %q{http://farmfacts.fork.de/}
   s.licenses = ["MIT"]
@@ -67,6 +68,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.5.2}
   s.summary = %q{Sinatra based WebDAV server implementation.}
   s.test_files = [
+    "test/integration/litmus_test.rb",
     "test/teststrap.rb",
     "test/unit/file_storage_test.rb",
     "test/unit/memory_storage_test.rb",
