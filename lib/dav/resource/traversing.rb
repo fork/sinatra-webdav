@@ -25,16 +25,25 @@ module DAV
     end
 
     def destination
-      @destination ||= begin
-        http_destination = request.env['HTTP_DESTINATION']
-        uri = URI.parse to_utf8(http_destination)
-
-        join uri
-      end
+      load_destination unless defined? @destination
+      @destination
     end
     def destination=(resource)
       @destination = resource
     end
+
+    protected
+
+      def load_destination
+        http_destination = request.env['HTTP_DESTINATION']
+
+        unless http_destination.nil? or http_destination.empty?
+          uri = URI.parse to_utf8(http_destination)
+          @destination = join uri
+        else
+          @destination = nil
+        end
+      end
 
   end
 end
