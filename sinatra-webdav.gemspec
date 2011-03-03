@@ -67,14 +67,10 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.5.2}
   s.summary = %q{Sinatra based WebDAV server implementation.}
   s.test_files = [
-    "test/integration/litmus_test.rb",
-    "test/integration/properties_test.rb",
-    "test/integration/webdav_test.rb",
     "test/teststrap.rb",
     "test/unit/event_handling_test.rb",
     "test/unit/file_storage_test.rb",
     "test/unit/memory_storage_test.rb",
-    "test/unit/namespace_test.rb",
     "test/unit/properties_test.rb",
     "test/unit/redis_storage_test.rb",
     "test/unit/resource_test.rb",
