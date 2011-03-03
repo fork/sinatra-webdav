@@ -3,16 +3,12 @@ module DAV
   module Actions
 
     def mkcol(responder, now = Time.now)
-      unless block_given?
-        properties.creation_date = now
-        properties.display_name  = File.basename uri.path
-        properties.resource_type = 'collection'
-      else
-        yield properties
-      end
+      properties.creation_date = now
+      properties.display_name  = File.basename uri.path
+      properties.resource_type = 'collection'
 
       responder.respond_to(uri) do |response|
-        response.on(:finish) { |status| store if status.ok? }
+        response.on(:finish) { |status| store_all if status.ok? }
         response.status :ok!
       end
     end
@@ -20,18 +16,14 @@ module DAV
       content_type = request.content_type
       content_type ||= Rack::Mime.mime_type File.extname(uri.path)
 
-      unless block_given?
-        properties.creation_date  = now
-        properties.display_name   = File.basename uri.path
-        properties.content_length = request.content_length
-        properties.content_type   = content_type
-        properties.entity_tag     = "#{ request.content_length }-#{ checksum }"
-      else
-        yield properties
-      end
+      properties.creation_date  = now
+      properties.display_name   = File.basename uri.path
+      properties.content_length = request.content_length
+      properties.content_type   = content_type
+      properties.entity_tag     = "#{ request.content_length }-#{ checksum }"
 
       responder.respond_to(uri) do |response|
-        response.on(:finish) { |status| store if status.ok? }
+        response.on(:finish) { |status| store_all if status.ok? }
         response.status :ok!
       end
     end
@@ -73,10 +65,13 @@ module DAV
       end
     end
 
-    def copy responder, Δ = depth(:default => Infinity)
-      unless collection? then destination.put(responder) { |p| properties.copy p }
+    def copy responder, Δ = depth(:default => Infinity), now = Time.now
+      unless collection?
+        destination.put responder, now
+        properties.copy destination.properties
       else
-        destination.mkcol(responder) { |p| properties.copy p }
+        destination.mkcol responder, now
+        properties.copy destination.properties
         Δ -= 1
 
         children.each do |child|
@@ -84,12 +79,12 @@ module DAV
           basename << '/' if child.collection?
 
           child.destination = destination.join basename
-          child.copy responder, Δ
+          child.copy responder, Δ, now
         end unless Δ < 0
       end
     end
     def move responder, Δ = depth(:default => Infinity)
-      copy responder, Δ
+      copy responder, Δ, properties.creation_date
       delete responder
     end
 
@@ -106,21 +101,23 @@ module DAV
     protected
 
       def store
-        if properties.collection?
-          resource_storage.set id, nil
-        else
+        content = nil
+
+        unless properties.collection?
           request.body.rewind
-          resource_storage.set id, request.body.read
+          content = request.body.read
         end
 
-        if request.respond_to? :properties
-          request.properties.copy properties
-        else
-          properties.last_modified = Time.now
-          properties.store
-        end
+        resource_storage.set id, content
+      end
+      def store_all
+        store
 
-        parent.children.add(self).store
+        properties.last_modified = Time.now
+        properties.store
+
+        parent.children.add self
+        parent.children.store
       end
 
   end
