@@ -7,26 +7,24 @@ module DAV
         super(*args)
 
         if matcher.respond_to? :matches?
-          def self.matches?(uri)
-            matcher.matches? uri
+          def self.call(resource, *args)
+            unit.call(resource, *args) if matcher.matches? resource
           end
         elsif matcher.is_a? String
-          def self.matches?(uri)
-            File.fnmatch? matcher, uri.path
+          def self.call(resource)
+            if File.fnmatch? matcher, resource.uri.path
+              unit.call(resource, *args)
+            end
           end
         elsif matcher.is_a? Regexp
-          def self.matches?(uri)
-            matcher =~ uri.path
+          def self.call(uri)
+            unit.call(resource, *args) if matcher =~ resource.uri.path
           end
         end
       end
 
-      def matches?(uri)
-        true
-      end
-
       def call(resource, *args)
-        unit.call(resource, *args) if matches? resource.uri
+        unit.call resource, *args
       end
 
     end
