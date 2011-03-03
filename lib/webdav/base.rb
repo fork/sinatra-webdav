@@ -1,6 +1,7 @@
 # Sinatra based WebDAV implementation
 #
 # see http://www.webdav.org/specs/rfc4918.html
+# TODO move conditions into preconditions of Responder::Response object
 class WebDAV::Base < ::Sinatra::Base
   enable :raise_errors
   set :root, File.expand_path('../..', __FILE__)
@@ -29,36 +30,35 @@ class WebDAV::Base < ::Sinatra::Base
     not_allowed if resource.exist?
     unsupported if request.body.size > 0
 
-    responder = DAV::Responder.new { |r| resource.mkcol r }
+    responder { |res| resource.mkcol res }
 
     headers no_cache
     ok
   end
 
-  move '*' do
+  copy '*' do
     not_found unless resource.exist?
+    bad_request if resource.destination.nil?
     conflict unless resource.destination.parent.collection?
 
     exists = resource.destination.exist?
-
-    # TODO move this into Resource#copy
     precondition_failed if exists and not resource.overwrite?
 
-    responder = DAV::Responder.new { |r| resource.move r }
+    responder { |res| resource.copy res }
 
     headers no_cache
     exists ? no_content : created
   end
 
-  copy '*' do
+  move '*' do
     not_found unless resource.exist?
+    bad_request if resource.destination.nil?
     conflict unless resource.destination.parent.collection?
 
     exists = resource.destination.exist?
-    # TODO move this into Resource#copy
     precondition_failed if exists and not resource.overwrite?
 
-    responder = DAV::Responder.new { |r| resource.copy r }
+    responder { |res| resource.move res }
 
     headers no_cache
     exists ? no_content : created
@@ -72,8 +72,7 @@ class WebDAV::Base < ::Sinatra::Base
 
     content_type 'application/xml'
 
-    responder = DAV::Responder.new { |r| resource.propfind r }
-    multi_status responder
+    multi_status responder { |res| resource.propfind res }
   end
 
   proppatch '*' do
@@ -84,13 +83,12 @@ class WebDAV::Base < ::Sinatra::Base
 
     headers no_cache
 
-    responder = DAV::Responder.new { |r| resource.proppatch r }
-    multi_status responder
+    multi_status responder { |res| resource.proppatch res }
   end
 
   put '*' do
     conflict unless resource.parent.collection?
-    responder = DAV::Responder.new { |r| resource.put r }
+    responder = DAV::Responder.new { |res| resource.put res }
 
     created
   end
@@ -98,8 +96,12 @@ class WebDAV::Base < ::Sinatra::Base
   delete '*' do
     not_found unless resource.exist?
 
-    responder = DAV::Responder.new { |r| resource.delete r }
-    responder.status(resource.uri).ok?? ok : multi_status(responder)
+    responder { |res| resource.delete res }
+
+    if responder.status(resource.uri).ok? then ok
+    else
+      multi_status responder
+    end
   end
 
   # TODO implement LOCK method

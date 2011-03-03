@@ -11,4 +11,14 @@ module WebDAV::Convenience
     @resource ||= DAV::Resource.new request
   end
 
+  def responder
+    yield @responder if defined? @responder and block_given?
+
+    @responder ||= if block_given?
+      DAV::Responder.new(request, &Proc.new)
+    else
+      DAV::Responder.new request
+    end
+  end
+
 end
