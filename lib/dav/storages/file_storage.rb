@@ -13,12 +13,17 @@ module DAV
       path = opts.fetch :root, Dir.tmpdir
       path = File.join path, opts[:prefix] || File.basename(__FILE__)
 
+      @opts   = opts
       @memory = Pathname File.expand_path(path)
-      @memory.mkpath unless @memory.directory?
+
+      # TODO Check if user can write, too.
+      if @memory.exist? && !@memory.directory?
+        raise "Cannot store data at #{ @memory }!"
+      end
     end
 
     def scope(opts)
-      self.class.new opts
+      self.class.new @opts.merge(opts)
     end
 
     def get(key)
