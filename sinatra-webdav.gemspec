@@ -68,7 +68,6 @@ Gem::Specification.new do |s|
   s.summary = %q{Sinatra based WebDAV server implementation.}
   s.test_files = [
     "test/teststrap.rb",
-    "test/unit/event_handling_test.rb",
     "test/unit/file_storage_test.rb",
     "test/unit/memory_storage_test.rb",
     "test/unit/properties_test.rb",
