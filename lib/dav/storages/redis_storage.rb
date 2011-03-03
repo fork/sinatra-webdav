@@ -16,7 +16,7 @@ module DAV
     end
 
     def scope(opts)
-      self.class.new opts.merge(:memory => redis)
+      self.class.new opts.merge(:memory => memory)
     end
 
     def get(key)
