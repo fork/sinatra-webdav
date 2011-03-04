@@ -11,13 +11,13 @@ module DAV
             unit.call(resource, *args) if matcher.matches? resource
           end
         elsif matcher.is_a? String
-          def self.call(resource)
+          def self.call(resource, *args)
             if File.fnmatch? matcher, resource.uri.path
               unit.call(resource, *args)
             end
           end
         elsif matcher.is_a? Regexp
-          def self.call(uri)
+          def self.call(resource, *args)
             unit.call(resource, *args) if matcher =~ resource.uri.path
           end
         end
