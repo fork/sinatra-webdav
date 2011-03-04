@@ -75,7 +75,7 @@ module DAV
 #      key = URI.encode_component key, URI::CharacterClasses::PATH
 
       basenames = key.split '/'
-      basenames.shift if basenames.first.empty?
+      basenames.shift if basenames.first and basenames.first.empty?
 
       @memory.join File.join(basenames)
     end

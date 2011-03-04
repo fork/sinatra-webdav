@@ -116,7 +116,7 @@ module DAV
         properties.last_modified = Time.now
         properties.store
 
-        parent.children.add self
+        parent.children.add self unless parent == self
         parent.children.store
       end
 
