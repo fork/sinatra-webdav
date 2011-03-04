@@ -19,6 +19,12 @@ module DAV
   <D:getlastmodified/>
 </D:prop>
 XML
+    ALLPROP = <<-XML
+<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:">
+  <D:allprop/>
+</D:propfind>
+XML
 
     # list of protected properties grouped by namespace href
     PROTECTED = Hash.new { |mem, ns| mem[ns] = [] }
@@ -83,16 +89,9 @@ XML
       #writer {|*|}
     end
 
-    def self.children_by_names(names)
-      names = names.map { |name| "self::D:#{ name }" }.join ' or '
-      "child::*[#{ names }]"
-    end
-
     def initialize(resource)
       data     = property_storage.get(resource.id) || BLANK
       document = Nokogiri::XML data
-
-      @query = "/D:prop/D:%s"
 
       super resource.id, document
     end
@@ -138,7 +137,6 @@ XML
 
         if response.precondition.ok?
           properties.each do |(modifier, prop)|
-#            puts modifier, prop
             send modifier, prop
             status.properties[200] << prop
           end
@@ -156,13 +154,6 @@ XML
 
       self
     end
-
-    ALLPROP = <<-XML
-<?xml version="1.0" encoding="utf-8" ?>
-<D:propfind xmlns:D="DAV:">
-  <D:allprop/>
-</D:propfind>
-XML
 
     def find(request, response)
       request.rewind
@@ -190,7 +181,7 @@ XML
               end
             end
           when 'propname'
-            # NodeSet#each does return INT!
+            # wtf: NodeSet#each does return INT!
             nodes.each { |n| n.children.remove }
             status.properties[200] = nodes
           when 'allprop'
@@ -219,7 +210,7 @@ XML
     end
 
     # Resource isn't a collection if its resourcetype property is self-closed.
-    # Therefor the property must be nil.
+    # Therefor the property value must be nil.
     def collection?
       not resource_type.nil?
     end
@@ -244,7 +235,6 @@ XML
       end
 
       def find_node(property, name = property.name, ns = property.namespace)
-#        puts "#{ name }: #{ ns.inspect }"
         if ns
           document.root.at_xpath "C:#{ name }", 'C' => ns.href
         else
@@ -265,12 +255,6 @@ XML
         node.children = property.children
 
         node
-#      rescue => e
-#        puts namespaces
-#        puts e.backtrace
-#        raise
-#      ensure
-#        puts node
       end
       def remove(property)
         node = find_node property
@@ -280,7 +264,7 @@ XML
       end
 
       def fetch(node_name, default = nil)
-        node = document.xpath(@query % node_name, 'D' => 'DAV:').first || default
+        node = document.xpath("/D:prop/D:#{ node_name }", 'D' => 'DAV:').first || default
         block_given?? yield(node) : node if node
       end
       def add_property(node_name)
