@@ -66,6 +66,7 @@ module DAV
       protected
 
         def cancel!
+          # TODO log.info about canceled...
           throw :cancel
         end
 
