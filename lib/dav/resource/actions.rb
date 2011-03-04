@@ -2,7 +2,13 @@
 module DAV
   module Actions
 
+    def get
+      content
+    end
+
     def mkcol(responder, now = Time.now)
+      @content = nil
+
       properties.creation_date = now
       properties.display_name  = File.basename uri.path
       properties.resource_type = 'collection'
@@ -13,6 +19,9 @@ module DAV
       end
     end
     def put(responder, now = Time.now)
+      request.body.rewind
+      @content = request.body.read
+
       content_type = request.content_type
       content_type ||= Rack::Mime.mime_type File.extname(uri.path)
 
@@ -101,13 +110,6 @@ module DAV
     protected
 
       def store
-        content = nil
-
-        unless properties.collection?
-          request.body.rewind
-          content = request.body.read
-        end
-
         resource_storage.set id, content
       end
       def store_all

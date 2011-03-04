@@ -8,8 +8,6 @@ module DAV
     include Actions
     include Convenience
 
-    alias get body
-
     extend Callbacks
     define_callbacks :get, :put, :mkcol, :delete, :copy, :move
     define_callbacks :propfind, :proppatch, :lock, :unlock
@@ -50,10 +48,19 @@ module DAV
       @id ||= "#{ uri.host }/#{ path.join '/' }"
     end
 
+    def body
+      @body = resource_storage.reader id unless defined? @body
+      @body
+    end
+    def content
+      @content = body.read unless defined? @content
+      @content
+    end
+
     protected
 
       def checksum
-        Zlib.crc32 body.read
+        Zlib.crc32 content
       end
 
   end

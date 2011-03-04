@@ -39,9 +39,6 @@ module DAV
     def last_modified
       properties.last_modified
     end
-    def body
-      resource_storage.reader id
-    end
 
     def transcode(url)
       url = URI.unencode url unless DAV.passenger?
