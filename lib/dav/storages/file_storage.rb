@@ -46,7 +46,10 @@ module DAV
     end
     def delete(key)
       path = reader key
-      path.read.tap { |x| path.rmtree } if path.file?
+      content = path.file?? path.read : nil
+      path.rmtree
+    ensure
+      return content
     end
 
     def member?(key)
