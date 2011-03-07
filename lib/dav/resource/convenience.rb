@@ -19,7 +19,7 @@ module DAV
     end
 
     def exist?
-      Time === properties.creation_date
+      resource_storage.member? id
     end
     def collection?
       exist? and properties.collection?

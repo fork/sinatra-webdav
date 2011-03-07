@@ -7,6 +7,7 @@ module DAV
     end
 
     def mkcol(responder, now = Time.now)
+      # TODO add support for MKCOL with body
       @content = nil
 
       properties.creation_date = now
@@ -19,17 +20,19 @@ module DAV
       end
     end
     def put(responder, now = Time.now)
-      request.body.rewind
-      @content = request.body.read
+      unless defined? @content
+        request.body.rewind
+        @content = request.body.read
 
-      content_type = request.content_type
-      content_type ||= Rack::Mime.mime_type File.extname(uri.path)
+        content_type = request.content_type
+        content_type ||= Rack::Mime.mime_type File.extname(uri.path)
 
-      properties.creation_date  = now
-      properties.display_name   = File.basename uri.path
-      properties.content_length = request.content_length
-      properties.content_type   = content_type
-      properties.entity_tag     = "#{ request.content_length }-#{ checksum }"
+        properties.display_name   = File.basename uri.path
+        properties.content_length = request.content_length
+        properties.content_type   = content_type
+        properties.entity_tag     = "#{ request.content_length }-#{ checksum }"
+      end
+      properties.creation_date    = now
 
       responder.respond_to(uri) do |response|
         response.on(:finish) { |status| store_all if status.ok? }
@@ -75,22 +78,18 @@ module DAV
     end
 
     def copy responder, Δ = depth(:default => Infinity), now = Time.now
-      unless collection?
-        destination.put responder, now
-        properties.copy destination.properties
-      else
-        destination.mkcol responder, now
-        properties.copy destination.properties
-        Δ -= 1
+      destination.put responder, now
+      Δ -= 1
 
+      if collection?
         children.each do |child|
           basename = child.display_name
           basename << '/' if child.collection?
 
           child.destination = destination.join basename
           child.copy responder, Δ, now
-        end unless Δ < 0
-      end
+        end
+      end unless Δ < 0
     end
     def move responder, Δ = depth(:default => Infinity)
       copy responder, Δ, properties.creation_date
@@ -106,21 +105,6 @@ module DAV
     def search(*args)
       raise NotImplementedError
     end
-
-    protected
-
-      def store
-        resource_storage.set id, content
-      end
-      def store_all
-        store
-
-        properties.last_modified = Time.now
-        properties.store
-
-        parent.children.add self unless parent == self
-        parent.children.store
-      end
 
   end
 end

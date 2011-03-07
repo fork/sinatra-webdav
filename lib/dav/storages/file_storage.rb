@@ -49,6 +49,10 @@ module DAV
       path.read.tap { |x| path.rmtree } if path.file?
     end
 
+    def member?(key)
+      reader(key).exist?
+    end
+
     def keys(pattern = nil)
       paths = []
 

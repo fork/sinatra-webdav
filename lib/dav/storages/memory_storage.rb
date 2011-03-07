@@ -23,6 +23,10 @@ module DAV
       @memory[@prefix].delete key
     end
 
+    def member?(key)
+      @memory[@prefix].member? key
+    end
+
     def keys(pattern = nil)
       list = @memory[@prefix].keys
       list.delete_if do |key|

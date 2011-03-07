@@ -56,6 +56,22 @@ module DAV
       @content = body.read unless defined? @content
       @content
     end
+    def content=(content)
+      @content = content
+    end
+
+    def store
+      resource_storage.set id, content
+    end
+    def store_all
+      store
+
+      properties.last_modified = Time.now
+      properties.store
+
+      parent.children.add self unless parent == self
+      parent.children.store
+    end
 
     protected
 

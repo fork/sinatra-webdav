@@ -40,6 +40,10 @@ module DAV
       @memory.hget(@prefix, key).tap { |v| @memory.hdel @prefix, key }
     end
 
+    def member?(key)
+      @memory.hexists @prefix, encode(key)
+    end
+
     def keys(pattern = nil)
       pattern ||= '*'
       @memory.hkeys.select { |key| File.fnmatch? pattern, key }
