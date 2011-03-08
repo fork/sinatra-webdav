@@ -1,7 +1,7 @@
 module DAV
   class Children < Struct.new(:parent)
     include DAV
-    attr_reader :paths
+    attr_reader :uris
 
     SEPARATOR = "\n"
 
@@ -13,8 +13,8 @@ module DAV
     def store
       return unless changed?
 
-      unless @paths.empty?
-        relation_storage.set parent.id, @paths.join(SEPARATOR)
+      unless @uris.empty?
+        relation_storage.set parent.id, @uris.join(SEPARATOR)
       else
         relation_storage.delete parent.id
       end
@@ -23,19 +23,19 @@ module DAV
     end
 
     def add(child)
-      child.tap { |x| @paths << child.uri.path }
+      child.tap { |x| @uris << child.uri }
       changed!
       self
     end
     def remove(child)
-      child.tap { |x| @paths.delete child.uri.path }
+      child.tap { |x| @uris.delete child.uri }
       changed!
       self
     end
 
     def each
       if block_given?
-        @paths.each { |path| yield parent.join(path) }
+        @uris.each { |uri| yield parent.join(uri.path) }
       else
         Enumerator.new self, :each
       end
@@ -56,7 +56,7 @@ module DAV
         string   = relation_storage.get parent.id
         string ||= ''
 
-        @paths = string.split(SEPARATOR).map { |uri| URI.parse(uri).path }
+        @uris = string.split(SEPARATOR).map { |uri| URI.parse uri }
       end
 
   end
