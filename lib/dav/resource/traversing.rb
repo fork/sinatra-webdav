@@ -40,7 +40,7 @@ module DAV
         unless http_destination.nil? or http_destination.empty?
           uri = URI.parse to_utf8(http_destination)
           @destination = join(uri).tap do |r|
-            r.content = content
+            r.content = collection?? nil : content
             properties.copy r.properties
           end
         else
