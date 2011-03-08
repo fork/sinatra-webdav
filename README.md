@@ -46,6 +46,7 @@ This extracts litmus, configures, compiles and runs it.
 
 * implement LOCK and UNLOCK
 * implement ACL
+* improve COPY/MOVE perf (skip reading content into mem with FileStorage)
 * write unit tests for responder
 * write documentation
 * implement DeltaV
