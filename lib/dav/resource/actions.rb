@@ -44,7 +44,7 @@ module DAV
 
       responder.respond_to uri do |response|
         response.precondition do |condition|
-          children.uris.all? { |uri| responder.status(uri).ok? } or
+          children.all? { |child| responder.status(child.uri).ok? } or
           condition.failed_dependency!
         end
 
