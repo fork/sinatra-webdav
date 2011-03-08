@@ -29,6 +29,9 @@ module DAV
       @destination
     end
     def destination=(resource)
+      resource.content = content
+      properties.copy resource.properties
+
       @destination = resource
     end
 
@@ -38,11 +41,7 @@ module DAV
         http_destination = request.env['HTTP_DESTINATION']
 
         unless http_destination.nil? or http_destination.empty?
-          uri = URI.parse to_utf8(http_destination)
-          @destination = join(uri).tap do |r|
-            r.content = content
-            properties.copy r.properties
-          end
+          self.destination = join http_destination
         else
           @destination = nil
         end
