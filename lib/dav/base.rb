@@ -53,7 +53,7 @@ module DAV
       @body
     end
     def content
-      @content = body.read unless defined? @content
+      @content = collection?? nil : body.read unless defined? @content
       @content
     end
     def content=(content)
