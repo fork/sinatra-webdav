@@ -57,7 +57,7 @@ module DAV
       @content
     end
     def content=(content)
-      @content = content
+      @content = content.nil?? content : content.clone
     end
 
     def store
