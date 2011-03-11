@@ -46,6 +46,8 @@ module DAV
       @@opener[type] = opener || Proc.new
     end
     def open_as(type)
+      @as ||= {}
+
       unless @as.member? type
         if opener = @@opener[type]
           @as[type] = opener[content]
