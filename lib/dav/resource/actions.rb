@@ -53,11 +53,7 @@ module DAV
         end
 
         response.on(:finish) do |status|
-          if status.ok?
-            parent.children.remove(self).store
-            properties.delete
-            resource_storage.delete id
-          end
+          delete_all if status.ok?
         end
       end
     end

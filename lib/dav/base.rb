@@ -72,6 +72,13 @@ module DAV
       parent.children.add self unless parent == self
       parent.children.store
     end
+    def delete_all
+      parent.children.remove(self).store
+
+      properties.delete
+
+      resource_storage.delete id
+    end
 
     protected
 
