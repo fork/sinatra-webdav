@@ -24,11 +24,11 @@ module DAV
 
     def self.new(request, uri = nil)
       uri ||= begin
-        url = Convenience.transcode(request.url) do |url|
+        utf8_url = Convenience.transcode(request.url) do |url|
           Convenience.to_utf8 url
         end
 
-        URI.parse url
+        URI.parse utf8_url
       end
 
       super request, uri
