@@ -46,16 +46,17 @@ module DAV
       @@opener[type] = opener || Proc.new
     end
     def open_as(type)
+      # FIXME assign @as on initialize
       @as ||= {}
 
       unless @as.member? type
+        # TODO check if content type matches...
         if opener = @@opener[type]
           @as[type] = opener[content]
         else
           @as[type] = nil
         end
       end
-
       yield @as[type] if @as[type]
     end
 
