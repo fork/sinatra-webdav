@@ -40,6 +40,23 @@ module DAV
       properties.last_modified
     end
 
+    @@opener = {}
+
+    def self.opener(type, opener)
+      @@opener[type] = opener || Proc.new
+    end
+    def open_as(type)
+      unless @as.member? type
+        if opener = @@opener[type]
+          @as[type] = opener[content]
+        else
+          @as[type] = nil
+        end
+      end
+
+      yield @as[type] if @as[type]
+    end
+
     def transcode(url)
       url = URI.unencode url unless DAV.passenger?
       url = yield url if block_given?
