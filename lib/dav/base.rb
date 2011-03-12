@@ -13,17 +13,25 @@ module DAV
     define_callbacks :propfind, :proppatch, :lock, :unlock
     define_callbacks :search
 
-    RootRequest = Struct.new :url, :body
+    def self.mkroot(domain, now = Time.now)
+      root = new nil, URI.parse("file://#{ domain }/")
 
-    def self.mkroot(domain)
-      root = new RootRequest.new("http://#{ domain }/")
-      DAV::Responder.new { |r| root.mkcol r } unless root.collection?
+      unless root.collection?
+        root.content = nil
 
-      root
+        root.properties.creation_date = now
+        root.properties.display_name  = ''
+        root.properties.resource_type = 'collection'
+
+        root.store_all
+      end
+
+      puts root.properties.document
     end
 
     def self.new(request, uri = nil)
       uri ||= begin
+        # FIXME something is broken here, see warning in litmus
         utf8_url = Convenience.transcode(request.url) do |url|
           Convenience.to_utf8 url
         end
@@ -78,6 +86,9 @@ module DAV
       properties.delete
 
       resource_storage.delete id
+    end
+    def update_etag
+      properties.entity_tag = "#{ content.length }-#{ checksum }"
     end
 
     protected

@@ -30,7 +30,7 @@ module DAV
         properties.display_name   = File.basename uri.path
         properties.content_length = request.content_length
         properties.content_type   = content_type
-        properties.entity_tag     = "#{ request.content_length }-#{ checksum }"
+        update_etag
       end
       properties.creation_date    = now
 

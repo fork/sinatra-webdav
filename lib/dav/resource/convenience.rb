@@ -50,7 +50,7 @@ module DAV
       @as ||= {}
 
       unless @as.member? type
-        # TODO check if content type matches...
+        # TODO check if content type fits...
         if opener = @@opener[type]
           @as[type] = opener[content]
         else
