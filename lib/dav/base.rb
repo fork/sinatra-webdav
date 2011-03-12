@@ -25,8 +25,6 @@ module DAV
 
         root.store_all
       end
-
-      puts root.properties.document
     end
 
     def self.new(request, uri = nil)
