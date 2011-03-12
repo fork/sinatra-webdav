@@ -20,6 +20,8 @@ module DAV
       end
 
       reset!
+
+      return true
     end
 
     def add(child)
