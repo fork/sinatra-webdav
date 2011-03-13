@@ -40,6 +40,10 @@ module DAV
       properties.last_modified
     end
 
+    def decoded_uri
+      URI.unencode uri, URI
+    end
+
     @@opener = {}
 
     def self.opener(type, opener)

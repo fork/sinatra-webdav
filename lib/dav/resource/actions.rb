@@ -11,7 +11,7 @@ module DAV
       @content = nil
 
       properties.creation_date = now
-      properties.display_name  = File.basename uri.path
+      properties.display_name  = File.basename decoded_uri.path
       properties.resource_type = 'collection'
 
       responder.respond_to(uri) do |response|
@@ -27,7 +27,7 @@ module DAV
         content_type = request.content_type
         content_type ||= Rack::Mime.mime_type File.extname(uri.path)
 
-        properties.display_name   = File.basename uri.path
+        properties.display_name   = File.basename decoded_uri.path
         properties.content_length = request.content_length
         properties.content_type   = content_type
         update_etag
@@ -79,7 +79,7 @@ module DAV
 
       if collection?
         children.each do |child|
-          basename = child.display_name
+          basename = File.basename child.uri.path
           basename << '/' if child.collection?
 
           child.destination = destination.join basename
