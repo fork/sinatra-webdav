@@ -25,6 +25,8 @@ module DAV
         @content = request.body.read
 
         content_type = request.content_type
+        # RADAR ignore charset for the time being
+        content_type &&= content_type.split(';').first
         content_type ||= Rack::Mime.mime_type File.extname(uri.path)
 
         properties.display_name   = File.basename decoded_uri.path
