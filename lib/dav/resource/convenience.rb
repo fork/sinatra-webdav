@@ -65,7 +65,7 @@ module DAV
     end
 
     def transcode(url)
-      url = URI.unencode url unless DAV.passenger?
+      url = URI.unencode url
       url = yield url if block_given?
 
       URI.encode url
