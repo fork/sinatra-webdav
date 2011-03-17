@@ -25,12 +25,12 @@ module DAV
     end
 
     def add(child)
-      child.tap { |x| @uris << child.decoded_uri }
+      @uris.push child.decoded_uri
       changed!
       self
     end
     def remove(child)
-      child.tap { |x| @uris.delete child.decoded_uri }
+      @uris.delete_if { |uri| uri == child.decoded_uri }
       changed!
       self
     end
