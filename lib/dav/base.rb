@@ -64,6 +64,7 @@ module DAV
     end
     def content=(content)
       @content = content.nil?? content : content.clone
+      properties.content_length = @content.to_s.length
     end
 
     def store
@@ -80,9 +81,7 @@ module DAV
     end
     def delete_all
       parent.children.remove(self).store
-
       properties.delete
-
       resource_storage.delete id
     end
     def update_etag

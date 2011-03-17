@@ -8,7 +8,7 @@ module DAV
 
     def mkcol(responder, now = Time.now)
       # TODO add support for MKCOL with body
-      @content = nil
+      self.content = nil
 
       properties.creation_date = now
       properties.display_name  = File.basename decoded_uri.path
@@ -22,7 +22,7 @@ module DAV
     def put(responder, now = Time.now)
       unless defined? @content
         request.body.rewind
-        @content = request.body.read
+        self.content = request.body.read
 
         content_type = request.content_type
         # RADAR ignore charset for the time being
@@ -30,7 +30,6 @@ module DAV
         content_type ||= Rack::Mime.mime_type File.extname(uri.path)
 
         properties.display_name   = File.basename decoded_uri.path
-        properties.content_length = request.content_length
         properties.content_type   = content_type
         update_etag
       end
