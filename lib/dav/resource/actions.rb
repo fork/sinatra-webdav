@@ -31,7 +31,6 @@ module DAV
 
         properties.display_name   = File.basename decoded_uri.path
         properties.content_type   = content_type
-        update_etag
       end
       properties.creation_date    = now
 

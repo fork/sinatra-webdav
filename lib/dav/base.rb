@@ -65,6 +65,7 @@ module DAV
     def content=(content)
       @content = content.nil?? content : content.clone
       properties.content_length = @content.to_s.length
+      update_etag
     end
 
     def store
@@ -85,7 +86,8 @@ module DAV
       resource_storage.delete id
     end
     def update_etag
-      properties.entity_tag = "#{ content.length }-#{ checksum }"
+      properties.
+        entity_tag = content ? "#{ content.length }-#{ checksum }" : nil
     end
 
     protected
