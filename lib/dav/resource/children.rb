@@ -61,7 +61,8 @@ module DAV
         string ||= ''
         base_uri = parent.uri
 
-        @uris = Set.new string.split(SEPARATOR).map { |uri| base_uri.join uri }
+        @uris = Set.new string.split(SEPARATOR).
+                               map { |uri| base_uri.join URI.parse(uri).path }
       end
 
   end
