@@ -1,3 +1,5 @@
+require 'set'
+
 module DAV
   class Children < Struct.new(:parent)
     include DAV
@@ -14,7 +16,7 @@ module DAV
       return unless changed?
 
       unless @uris.empty?
-        relation_storage.set parent.id, @uris.join(SEPARATOR)
+        relation_storage.set parent.id, @uris.to_a.join(SEPARATOR)
       else
         relation_storage.delete parent.id
       end
@@ -25,7 +27,7 @@ module DAV
     end
 
     def add(child)
-      @uris.push child.decoded_uri
+      @uris.add child.decoded_uri
       changed!
       self
     end
@@ -58,7 +60,7 @@ module DAV
         string   = relation_storage.get parent.id
         string ||= ''
 
-        @uris = string.split(SEPARATOR).map { |uri| URI.parse uri }
+        @uris = Set.new string.split(SEPARATOR).map { |uri| URI.parse uri }
       end
 
   end
