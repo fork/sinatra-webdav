@@ -59,8 +59,9 @@ module DAV
       def load_paths
         string   = relation_storage.get parent.id
         string ||= ''
+        base_uri = parent.uri
 
-        @uris = Set.new string.split(SEPARATOR).map { |uri| URI.parse uri }
+        @uris = Set.new string.split(SEPARATOR).map { |uri| base_uri.join uri }
       end
 
   end
