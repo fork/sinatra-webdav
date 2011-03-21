@@ -92,7 +92,7 @@ module DAV
     end
     def move responder, Δ = depth(:default => Infinity)
       copy responder, Δ, properties.creation_date
-      delete responder
+      delete responder unless destination.id == id
     end
 
     def lock(*args)
