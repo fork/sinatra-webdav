@@ -58,6 +58,10 @@ module DAV
       self
     end
 
+    def include?(resource)
+      uris.include? parent.uri.join(resource.decoded_uri)
+    end
+
     def each
       if block_given?
         uris.each { |uri| yield parent.join(uri.path) }
