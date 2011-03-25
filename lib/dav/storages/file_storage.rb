@@ -59,7 +59,7 @@ module DAV
       paths = []
       @memory.find do |path|
         Find.prune if pattern and not path.fnmatch? pattern
-        paths << path.to_s
+        paths << path.relative_path_from(@memory).to_s
       end
       paths
     end
