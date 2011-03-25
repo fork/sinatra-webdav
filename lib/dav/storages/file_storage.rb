@@ -56,9 +56,12 @@ module DAV
     end
 
     def keys(pattern = nil)
+      paths = []
       @memory.find do |path|
         Find.prune if pattern and not path.fnmatch? pattern
+        paths << path.to_s
       end
+      paths
     end
 
     def pathname(key)
