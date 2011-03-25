@@ -45,7 +45,7 @@ module DAV
     end
 
     def keys(pattern = nil)
-      keys = @memory.hkeys
+      keys = @memory.hkeys '*'
       keys.map! { |key| decode key }
       keys.select! { |key| File.fnmatch? pattern, key } if pattern
 
