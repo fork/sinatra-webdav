@@ -45,14 +45,20 @@ module DAV
     end
 
     def keys(pattern = nil)
-      pattern ||= '*'
-      @memory.hkeys.select { |key| File.fnmatch? pattern, key }
+      keys = @memory.hkeys
+      keys.map! { |key| decode key }
+      keys.select! { |key| File.fnmatch? pattern, key } if pattern
+
+      keys
     end
 
     protected
 
       def encode(key)
         URI.encode_component key, URI::CharacterClasses::PATH
+      end
+      def decode(key)
+        URI.unencode key
       end
 
   end
