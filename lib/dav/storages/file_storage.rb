@@ -1,6 +1,5 @@
 require 'pathname'
 require 'tmpdir'
-require 'base64'
 
 module DAV
   class FileStorage < Storage
@@ -57,30 +56,12 @@ module DAV
     end
 
     def keys(pattern = nil)
-      paths = []
-
-      @memory.children.each do |scope|
-        prefix = scope.basename
-
-        # TODO use glob
-        scope.children.each do |child|
-          unless child.directory?
-            key = "#{ prefix }#{ child.basename }"
-            if not pattern or File.fnmatch? pattern, key
-              paths << URI.unescape(key)
-            end
-          else
-            # TODO recourse
-          end
-        end
+      @memory.find do |path|
+        Find.prune if pattern and not path.fnmatch? pattern
       end
-
-      paths
     end
 
     def pathname(key)
-#      key = URI.encode_component key, URI::CharacterClasses::PATH
-
       basenames = key.split '/'
       basenames.shift if basenames.first and basenames.first.empty?
 
