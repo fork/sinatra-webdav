@@ -3,6 +3,7 @@
 For an example application using OmniAuth and the FileBackend see
 [dullahan](https://github.com/fork/farmfacts/tree/master/dullahan).
 
+
 ## Setup
 
     $ git clone git@github.com:fork/sinatra-webdav.git
@@ -44,13 +45,7 @@ This extracts litmus, configures, compiles and runs it.
 
 ## TODO
 
-* implement LOCK and UNLOCK
-* implement ACL
-* improve COPY/MOVE perf (see SUGGESTIONS.md)
-* write unit tests for responder
-* write documentation
-* implement DeltaV
-* test different setups (thin, unicorn, ...)
+.. see SUGGESTIONS.md.
 
 
 ## Contact
