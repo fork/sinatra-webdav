@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{sinatra-webdav}
-  s.version = "0.1.4"
+  s.version = "0.1.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Fork Unstable Media GmbH", "Florian Aßmann"]
-  s.date = %q{2011-03-11}
+  s.date = %q{2011-03-29}
   s.description = %q{Sinatra based WebDAV server implementation.}
   s.email = %q{src@fork.de}
   s.extra_rdoc_files = [
@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
     "LICENSE.txt",
     "README.md",
     "Rakefile",
+    "SUGGESTIONS.md",
     "VERSION",
     "lib/dav.rb",
     "lib/dav/base.rb",
