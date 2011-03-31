@@ -11,32 +11,13 @@ module DAV
       @adds, @removes = [], []
     end
 
-    def modify_set(set)
-      @removes.each do |child|
-        set.delete_if { |uri| uri == child.decoded_uri }
-      end
-      @adds.each { |child| set.add child.decoded_uri }
-
-      unless set.empty?
-        relation_storage.set parent.id, set.to_a.join(SEPARATOR)
-      else
-        relation_storage.delete parent.id
-      end
-    end
-
-    def write_optimistic(storage)
-      storage.watch 'relations'
-      set = uris
-      return storage.multi { modify_set set }
-    end
-
     def write
       storage = relation_storage.memory
 
       # TODO support optimistic locking with other storage engines, too
       return write_optimistic(storage) if storage.class.name == 'Redis'
 
-      modify_set uris
+      update get_data
       return true
     end
 
@@ -71,14 +52,41 @@ module DAV
     end
 
     def uris
-      str   = relation_storage.get parent.id
-      str ||= ''
+      str  = get_data
       base = parent.uri
 
       Set.new str.split(SEPARATOR).map { |uri| base.join URI.parse(uri).path }
     end
 
     protected
+
+      def get_data
+        relation_storage.get(parent.id) || ''
+      end
+      def update(data)
+        unless @removes.empty?
+          uris = @removes.map { |child| Regexp.escape child.decoded_uri }
+          data.gsub! /^(?:#{ uris.join '|' })#{ SEPARATOR }/, ''
+        end
+
+        @adds.each do |child|
+          decoded_uri = child.decoded_uri
+          unless data =~ /^#{ Regexp.escape decoded_uri }#{ SEPARATOR }/
+            data << "#{ decoded_uri }#{ SEPARATOR }"
+          end
+        end
+
+        unless data.empty?
+          relation_storage.set parent.id, data
+        else
+          relation_storage.delete parent.id
+        end
+      end
+      def write_optimistic(storage)
+        storage.watch 'relations'
+        data = get_data
+        return storage.multi { update data }
+      end
 
       def changed?
         not @adds.empty? && @removes.empty?
