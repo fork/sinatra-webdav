@@ -65,15 +65,14 @@ module DAV
       end
       def update(data)
         unless @removes.empty?
-          uris = @removes.map { |child| Regexp.escape child.decoded_uri }
-          data.gsub! /^(?:#{ uris.join '|' })#{ SEPARATOR }/, ''
+          paths = @removes.map { |child| Regexp.escape child.decoded_uri.path }
+          data.gsub! %r"^[a-z]+://[^/]+(?:#{ paths.join '|' })#{ SEPARATOR }", ''
         end
 
         @adds.each do |child|
           decoded_uri = child.decoded_uri
-          unless data =~ /^#{ Regexp.escape decoded_uri }#{ SEPARATOR }/
-            data << "#{ decoded_uri }#{ SEPARATOR }"
-          end
+          data =~ %r"^[a-z]+://[^/]+#{ decoded_uri.path }#{ SEPARATOR }" or
+          data << "#{ decoded_uri }#{ SEPARATOR }"
         end
 
         unless data.empty?
