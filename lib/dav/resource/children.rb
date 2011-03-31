@@ -5,6 +5,7 @@ module DAV
     include DAV
 
     SEPARATOR = "\n"
+    FINDER = "^[a-z]+:\/\/[^\/]+%s#{ SEPARATOR }"
 
     def initialize(parent)
       super parent
@@ -66,12 +67,12 @@ module DAV
       def update(data)
         unless @removes.empty?
           paths = @removes.map { |child| Regexp.escape child.decoded_uri.path }
-          data.gsub! /^[a-z]+:\/\/[^\/]+(?:#{ paths.join '|' })#{ SEPARATOR }/, ''
+          data.gsub!(/#{ FINDER % "(?:#{ paths.join '|' })" }/, '')
         end
 
         @adds.each do |child|
           decoded_uri = child.decoded_uri
-          data =~ %r"^[a-z]+://[^/]+#{ decoded_uri.path }#{ SEPARATOR }" or
+          data =~ /#{ FINDER % Regexp.escape(decoded_uri.path) }/ or
           data << "#{ decoded_uri }#{ SEPARATOR }"
         end
 
