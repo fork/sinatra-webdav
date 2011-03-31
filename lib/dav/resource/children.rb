@@ -66,7 +66,7 @@ module DAV
       def update(data)
         unless @removes.empty?
           paths = @removes.map { |child| Regexp.escape child.decoded_uri.path }
-          data.gsub! %r"^[a-z]+://[^/]+(?:#{ paths.join '|' })#{ SEPARATOR }", ''
+          data.gsub! /^[a-z]+:\/\/[^\/]+(?:#{ paths.join '|' })#{ SEPARATOR }/, ''
         end
 
         @adds.each do |child|
