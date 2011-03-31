@@ -29,10 +29,10 @@ module DAV
         content_type &&= content_type.split(';').first
         content_type ||= Rack::Mime.mime_type File.extname(uri.path)
 
-        properties.display_name   = File.basename decoded_uri.path
-        properties.content_type   = content_type
+        properties.display_name = File.basename decoded_uri.path
+        properties.content_type = content_type
       end
-      properties.creation_date    = now
+      properties.creation_date = now
 
       responder.respond_to(uri) do |response|
         response.on(:finish) { |status| store_all if status.ok? }
@@ -45,8 +45,7 @@ module DAV
       responder.respond_to uri do |response|
         response.precondition do |condition|
           success = children.uris.all? do |uri|
-            status = responder.status uri
-            status and status.ok? 
+            status = responder.status(uri) and status.ok?
           end
           condition.failed_dependency! unless success
         end

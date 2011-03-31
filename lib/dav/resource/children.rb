@@ -5,7 +5,7 @@ module DAV
     include DAV
 
     SEPARATOR = "\n"
-    FINDER = "^[a-z]+:\/\/[^\/]+%s#{ SEPARATOR }"
+    FINDER    = "^%s#{ SEPARATOR }"
 
     def initialize(parent)
       super parent
@@ -32,31 +32,29 @@ module DAV
     end
 
     def add(child)
-      @adds << child
+      @adds << child.decoded_uri.path
       self
     end
     def remove(child)
-      @removes << child
+      @removes << child.decoded_uri.path
       self
     end
 
     def include?(resource)
-      uris.include? parent.uri.join(resource.decoded_uri)
+      paths.include? resource.decoded_uri.path
     end
 
     def each
       if block_given?
-        uris.each { |uri| yield parent.join(uri.path) }
+        paths.each { |path| yield parent.join(path) }
       else
         Enumerator.new self, :each
       end
     end
 
     def uris
-      str  = get_data
       base = parent.uri
-
-      Set.new str.split(SEPARATOR).map { |uri| base.join URI.parse(uri).path }
+      paths.map { |path| base.join path }
     end
 
     protected
@@ -64,16 +62,20 @@ module DAV
       def get_data
         relation_storage.get(parent.id) || ''
       end
+      def paths
+        collection = get_data.split SEPARATOR
+        collection.pop
+
+        collection
+      end
       def update(data)
         unless @removes.empty?
-          paths = @removes.map { |child| Regexp.escape child.decoded_uri.path }
-          data.gsub!(/#{ FINDER % "(?:#{ paths.join '|' })" }/, '')
+          esc_paths = @removes.map { |path| Regexp.escape path }
+          data.gsub!(/#{ FINDER % "(?:#{ esc_paths.join '|' })" }/, '')
         end
-
-        @adds.each do |child|
-          decoded_uri = child.decoded_uri
-          data =~ /#{ FINDER % Regexp.escape(decoded_uri.path) }/ or
-          data << "#{ decoded_uri }#{ SEPARATOR }"
+        @adds.each do |path|
+          next if data =~ /#{ FINDER % Regexp.escape(path) }/
+          data << "#{ path }\n"
         end
 
         unless data.empty?
