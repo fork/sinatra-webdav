@@ -15,7 +15,7 @@ module DAV
       properties.resource_type = 'collection'
 
       responder.respond_to(uri) do |response|
-        response.on(:finish) { |status| store_all if status.ok? }
+        response.on(:finish) { |status| store if status.ok? }
         response.status :ok!
       end
     end
@@ -35,7 +35,7 @@ module DAV
       properties.creation_date = now
 
       responder.respond_to(uri) do |response|
-        response.on(:finish) { |status| store_all if status.ok? }
+        response.on(:finish) { |status| store if status.ok? }
         response.status :ok!
       end
     end

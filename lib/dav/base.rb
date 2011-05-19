@@ -24,7 +24,7 @@ module DAV
         root.properties.display_name  = ''
         root.properties.resource_type = 'collection'
 
-        root.store_all
+        root.store
       end
     end
 
@@ -69,11 +69,11 @@ module DAV
       update_etag
     end
 
-    def store
+    def store_content
       resource_storage.set id, content
     end
-    def store_all
-      store
+    def store
+      store_content
 
       properties.last_modified = Time.now
       properties.store
@@ -81,6 +81,8 @@ module DAV
       parent.children.add self unless parent == self
       parent.children.store
     end
+    alias store_all store
+
     def delete_all
       parent.children.remove(self).store
       properties.delete
