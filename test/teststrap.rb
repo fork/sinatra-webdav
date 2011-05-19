@@ -7,7 +7,6 @@ rescue Bundler::BundlerError => e
   $stderr.puts "Run `bundle install` to install missing gems"
   exit e.status_code
 end
-require 'riot'
 require File.expand_path('../../lib/sinatra-webdav', __FILE__)
 
 module Example
