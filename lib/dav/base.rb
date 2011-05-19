@@ -7,6 +7,7 @@ module DAV
     include Traversing
     include Actions
     include Convenience
+    include Opener
 
     extend Callbacks
     define_callbacks :get, :put, :mkcol, :delete, :copy, :move
