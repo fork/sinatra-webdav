@@ -63,10 +63,7 @@ module DAV
         relation_storage.get(parent.id) || ''
       end
       def paths
-        collection = get_data.split SEPARATOR
-        collection.pop
-
-        collection
+        get_data.split SEPARATOR
       end
       def update(data)
         unless @removes.empty?
