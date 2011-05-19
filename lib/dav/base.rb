@@ -52,7 +52,7 @@ module DAV
       path.shift if path.first and path.first.empty?
       path.pop if path.last and path.last.empty?
 
-      @id ||= "#{ uri.host }/#{ path.join '/' }"
+      @id ||= path.join '/'
     end
 
     def body
