@@ -17,7 +17,9 @@ module DAV
     def overwrite?
       request.env['HTTP_OVERWRITE'] == 'T'
     end
-
+    def is?(mime_fragment)
+      content_type.split('/').include? mime_fragment
+    end
     def exist?
       resource_storage.member? id
     end
