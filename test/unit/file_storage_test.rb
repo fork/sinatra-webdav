@@ -1,6 +1,5 @@
 ROOT = File.expand_path '../..', __FILE__
 require "#{ ROOT }/teststrap"
-require 'base64'
 
 context "DAV::FileStorage" do
   URI = Addressable::URI
