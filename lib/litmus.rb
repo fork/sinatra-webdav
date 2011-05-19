@@ -24,7 +24,9 @@ module Litmus
   end
 
   def puts(*args)
-    STDERR.puts(*args) if @enabled
+    return unless @enabled
+    STDERR.puts(*args)
+    STDERR.puts yield if block_given?
   end
 
   extend self
