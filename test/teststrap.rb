@@ -37,7 +37,6 @@ module PropertyReader
   end
 end
 
-require 'riot'
 class Riot::Situation
 
   def app; @app; end
