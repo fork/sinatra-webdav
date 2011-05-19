@@ -54,9 +54,7 @@ module DAV
           status.ok! if response.precondition.ok?
         end
 
-        response.on(:finish) do |status|
-          delete_all if status.ok?
-        end
+        response.on(:finish) { |status| delete_all if status.ok? }
       end
     end
 

@@ -1,25 +1,24 @@
-require 'set'
-
 module DAV
   class Children < Struct.new(:parent)
     include DAV
 
-    SEPARATOR = "\n"
-    FINDER    = "^%s#{ SEPARATOR }"
-
     def initialize(parent)
       super parent
-      @adds, @removes = [], []
+      @changes = []
     end
 
     def write
       storage = relation_storage.memory
 
-      # TODO support optimistic locking with other storage engines, too
-      return write_optimistic(storage) if storage.class.name == 'Redis'
-
-      update get_data
-      return true
+      # TODO Implement a sync class to support locking with other storages
+      # TODO make this work on resource level
+      if storage.class.name == 'Redis'
+        # RADAR This is just a hotfix!
+        return write_optimistic(storage)
+      else
+        update get_data
+        return true
+      end
     end
 
     def store
@@ -32,16 +31,16 @@ module DAV
     end
 
     def add(child)
-      @adds << child.decoded_uri.path
+      @changes << [child.decoded_uri.path, :add]
       self
     end
     def remove(child)
-      @removes << child.decoded_uri.path
+      @changes << [child.decoded_uri.path, :remove]
       self
     end
 
     def include?(resource)
-      paths.include? resource.decoded_uri.path
+      get_data =~ /^#{ Regexp.escape resource.decoded_uri.path }\n/
     end
 
     def each
@@ -63,16 +62,19 @@ module DAV
         relation_storage.get(parent.id) || ''
       end
       def paths
-        get_data.split SEPARATOR
+        # Ruby does not create an empty element if the last character is the
+        # separator!
+        get_data.split "\n"
       end
       def update(data)
-        unless @removes.empty?
-          esc_paths = @removes.map { |path| Regexp.escape path }
-          data.gsub!(/#{ FINDER % "(?:#{ esc_paths.join '|' })" }/, '')
-        end
-        @adds.each do |path|
-          next if data =~ /#{ FINDER % Regexp.escape(path) }/
-          data << "#{ path }\n"
+        @changes.each do |(path, change)|
+          path_rx = /^#{ Regexp.escape path }\n/
+          case change
+          when :add
+            data << "#{ path }\n" unless data =~ path_rx
+          when :remove
+            data.sub! path_rx, ''
+          end
         end
 
         unless data.empty?
@@ -88,11 +90,10 @@ module DAV
       end
 
       def changed?
-        not @adds.empty? && @removes.empty?
+        not @changes.empty?
       end
       def reset!
-        @adds.clear
-        @removes.clear
+        @changes.clear
       end
 
   end
