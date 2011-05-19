@@ -16,5 +16,9 @@ DAV.RelationStorage = storage.scope :prefix => 'RELATIONS'
 
 DAV::Base.mkroot 'localhost'
 
-WebDAV::Base.before { puts request.env['HTTP_X_LITMUS'] }
+Litmus.copymove 7
+
+WebDAV::Base.before { Litmus.init request.env['HTTP_X_LITMUS'] }
+WebDAV::Base.after { Litmus.reset! }
+
 run WebDAV::Base

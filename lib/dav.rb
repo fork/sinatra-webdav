@@ -56,7 +56,6 @@ module DAV
     end
 
   load_path = File.expand_path '../dav', __FILE__
-#  require "#{ load_path }/event_handling"
   require "#{ load_path }/responder"
   require "#{ load_path }/property_accessors"
   require "#{ load_path }/properties"
@@ -65,5 +64,6 @@ module DAV
   autoload :MemoryStorage, "#{ load_path }/storages/memory_storage.rb"
   autoload :RedisStorage, "#{ load_path }/storages/redis_storage.rb"
   autoload :FileStorage, "#{ load_path }/storages/file_storage.rb"
+  autoload :Litmus, "#{ load_path }/../litmus.rb"
 
 end
