@@ -64,6 +64,5 @@ module DAV
   autoload :MemoryStorage, "#{ load_path }/storages/memory_storage.rb"
   autoload :RedisStorage, "#{ load_path }/storages/redis_storage.rb"
   autoload :FileStorage, "#{ load_path }/storages/file_storage.rb"
-  autoload :Litmus, "#{ load_path }/../litmus.rb"
 
 end
