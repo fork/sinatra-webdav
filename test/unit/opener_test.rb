@@ -1,5 +1,5 @@
-ROOT = File.expand_path '../..', __FILE__
-require "#{ ROOT }/teststrap"
+root = File.expand_path '../..', __FILE__
+require "#{ root }/teststrap"
 require 'stringio'
 
 
