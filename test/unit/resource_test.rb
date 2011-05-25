@@ -1,16 +1,16 @@
-ROOT = File.expand_path '../..', __FILE__
-require "#{ ROOT }/teststrap"
+root = File.expand_path '../..', __FILE__
+require "#{ root }/teststrap"
 
 storage = DAV::MemoryStorage.new
 DAV.PropertyStorage = storage.scope :prefix => 'PROPERTIES'
 DAV.ResourceStorage = storage.scope :prefix => 'RESOURCES'
 DAV.RelationStorage = storage.scope :prefix => 'RELATIONS'
 
-context "DAV::Resource" do
+context 'DAV::Resource' do
   setup { DAV::Resource }
 
-  context "object" do
-    setup { topic.new URI.parse 'http://example.org/resource' }
+  context 'instance' do
+    setup { topic.new Request.new('http://example.org/resource') }
 
     asserts '#uri' do
       topic.uri
