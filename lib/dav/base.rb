@@ -29,13 +29,21 @@ module DAV
     end
 
     def self.new(request, uri = nil)
-      uri ||= begin
+      if uri.nil?
         # FIXME something is broken here, see warning in litmus
         utf8_url = Convenience.transcode(request.url) do |url|
           Convenience.to_utf8 url
         end
+        uri = URI.parse utf8_url
 
-        URI.parse utf8_url
+        if request.forwarded?
+          scheme = request.env['HTTP_X_FORWARDED_PROTO'] and uri.scheme = scheme
+          host   = request.env['HTTP_X_FORWARDED_HOST'] and uri.host = host
+          port   = request.env['HTTP_X_FORWARDED_PORT'] and uri.port = port
+        # maybe some scripts use Rack::Request,
+        #   but this should not be expected,
+        #   and we don't care!
+        end rescue nil
       end
 
       super request, uri

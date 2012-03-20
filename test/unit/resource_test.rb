@@ -8,8 +8,14 @@ DAV.RelationStorage = storage.scope :prefix => 'RELATIONS'
 context 'DAV::Resource' do
   setup { DAV::Resource }
 
+  asserts 'Forwarded URI with differing host' do
+    env = env_for 'http://example.org/resource', 'HTTP_X_FORWARDED_HOST' => 'host.local'
+    resource = topic.new Sinatra::Request.new(env)
+    resource.uri.to_s
+  end.equals 'http://host.local/resource'
+
   context 'instance' do
-    setup { topic.new Request.new('http://example.org/resource') }
+    setup { topic.new Sinatra::Request.new(env_for('http://example.org/resource', {})) }
 
     asserts '#uri' do
       topic.uri
