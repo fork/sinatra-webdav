@@ -1,8 +1,7 @@
 # keys must be escaped
 # XML is stored in a hash
 
-ROOT = File.expand_path '../..', __FILE__
-require "#{ ROOT }/teststrap"
+require File.expand_path('../../teststrap', __FILE__)
 
 class KeyMaster < Struct.new(:results)
   def hget(key, field)

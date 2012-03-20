@@ -18,6 +18,8 @@ module Example
   end
 end
 
+ROOT = File.expand_path '..', __FILE__
+
 module PropertyReader
   def length
     value = at_css('getcontentlength').text

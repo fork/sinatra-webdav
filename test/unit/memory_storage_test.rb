@@ -1,5 +1,4 @@
-ROOT = File.expand_path '../..', __FILE__
-require "#{ ROOT }/teststrap"
+require File.expand_path('../../teststrap', __FILE__)
 
 class KeyMaster < Struct.new(:results)
   def [](key)

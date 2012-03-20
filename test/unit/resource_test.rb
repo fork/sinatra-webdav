@@ -1,5 +1,4 @@
-root = File.expand_path '../..', __FILE__
-require "#{ root }/teststrap"
+require File.expand_path('../../teststrap', __FILE__)
 
 storage = DAV::MemoryStorage.new
 DAV.PropertyStorage = storage.scope :prefix => 'PROPERTIES'
