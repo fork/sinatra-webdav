@@ -39,6 +39,8 @@ end
 class Riot::Situation
 
   def app; @app; end
+  Rack::Test::Session.send :public, :env_for
+  Rack::Test::Methods.send :def_delegators, :current_session, :env_for
   include Rack::Test::Methods
   include Addressable
 
