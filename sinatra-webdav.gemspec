@@ -4,20 +4,19 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{sinatra-webdav}
-  s.version = "0.1.5"
+  s.name = "sinatra-webdav"
+  s.version = "0.1.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Fork Unstable Media GmbH", "Florian Aßmann"]
-  s.date = %q{2011-03-29}
-  s.description = %q{Sinatra based WebDAV server implementation.}
-  s.email = %q{src@fork.de}
+  s.authors = ["Fork Unstable Media GmbH", "Florian A\u{df}mann"]
+  s.date = "2012-03-20"
+  s.description = "Sinatra based WebDAV server implementation."
+  s.email = "src@fork.de"
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.md"
   ]
   s.files = [
-    ".bundle/config",
     "Gemfile",
     "Gemfile.lock",
     "LICENSE.txt",
@@ -34,11 +33,13 @@ Gem::Specification.new do |s|
     "lib/dav/resource/actions.rb",
     "lib/dav/resource/children.rb",
     "lib/dav/resource/convenience.rb",
+    "lib/dav/resource/opener.rb",
     "lib/dav/resource/traversing.rb",
     "lib/dav/responder.rb",
     "lib/dav/storages/file_storage.rb",
     "lib/dav/storages/memory_storage.rb",
     "lib/dav/storages/redis_storage.rb",
+    "lib/litmus.rb",
     "lib/sinatra-webdav.rb",
     "lib/webdav.rb",
     "lib/webdav/base.rb",
@@ -56,28 +57,36 @@ Gem::Specification.new do |s|
     "test/integration/litmus_test.rb",
     "test/litmus-0.12.1.tar.gz",
     "test/teststrap.rb",
+    "test/unit/database_storage_test.rb",
     "test/unit/file_storage_test.rb",
     "test/unit/memory_storage_test.rb",
+    "test/unit/opener_test.rb",
     "test/unit/properties_test.rb",
     "test/unit/redis_storage_test.rb",
     "test/unit/resource_test.rb",
     "test/unit/responder_test.rb",
+    "test/unit/s3_storage_test.rb",
+    "test/unit/storage_test.rb",
     "tmp/.gitignore"
   ]
-  s.homepage = %q{http://farmfacts.fork.de/}
+  s.homepage = "http://farmfacts.fork.de/"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.5.2}
-  s.summary = %q{Sinatra based WebDAV server implementation.}
+  s.rubygems_version = "1.8.10"
+  s.summary = "Sinatra based WebDAV server implementation."
   s.test_files = [
     "test/integration/litmus_test.rb",
     "test/teststrap.rb",
+    "test/unit/database_storage_test.rb",
     "test/unit/file_storage_test.rb",
     "test/unit/memory_storage_test.rb",
+    "test/unit/opener_test.rb",
     "test/unit/properties_test.rb",
     "test/unit/redis_storage_test.rb",
     "test/unit/resource_test.rb",
-    "test/unit/responder_test.rb"
+    "test/unit/responder_test.rb",
+    "test/unit/s3_storage_test.rb",
+    "test/unit/storage_test.rb"
   ]
 
   if s.respond_to? :specification_version then
@@ -92,7 +101,6 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<riot>, [">= 0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.5.2"])
-      s.add_development_dependency(%q<rcov>, [">= 0"])
     else
       s.add_dependency(%q<addressable>, [">= 0"])
       s.add_dependency(%q<nokogiri>, [">= 0"])
@@ -102,7 +110,6 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<riot>, [">= 0"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
       s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
-      s.add_dependency(%q<rcov>, [">= 0"])
     end
   else
     s.add_dependency(%q<addressable>, [">= 0"])
@@ -113,7 +120,6 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<riot>, [">= 0"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
     s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
-    s.add_dependency(%q<rcov>, [">= 0"])
   end
 end
 
