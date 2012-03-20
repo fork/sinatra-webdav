@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+if File.expand_path($0) == __FILE__
+
 require 'pathname'
 
 PORT = ARGV[0] || 3000
@@ -41,5 +43,7 @@ enter File.expand_path('../..', __FILE__) do |root|
     system 'make', "URL=http://localhost:#{ PORT }/", 'check'
     root.join('htdocs').rmtree
   end
+
+end
 
 end
