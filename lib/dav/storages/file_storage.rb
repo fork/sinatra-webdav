@@ -1,6 +1,8 @@
 require 'pathname'
 require 'tmpdir'
 
+# TODO use chambermaid for a typed implementation
+
 module DAV
   class FileStorage < Storage
     include Addressable
@@ -15,9 +17,10 @@ module DAV
       @opts   = opts
       @memory = Pathname File.expand_path(path)
 
-      # TODO Check if user can write, too.
-      if @memory.exist? && !@memory.directory?
-        raise "Cannot store data at #{ @memory }!"
+      @memory.mkpath unless @memory.exist?
+
+      unless @memory.directory? or @memory.writable?
+        raise "Cannot store data at #{ @memory }"
       end
     end
 
