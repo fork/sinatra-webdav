@@ -1,4 +1,5 @@
 ENV['RACK_ENV'] = 'test'
+ENV['BUNDLE_GEMFILE'] = File.expand_path '../../Gemfile', __FILE__
 
 use Rack::CommonLogger
 use Rack::ShowExceptions
