@@ -39,7 +39,16 @@ module DAV
         if request.forwarded?
           scheme = request.env['HTTP_X_FORWARDED_PROTO'] and uri.scheme = scheme
           host   = request.env['HTTP_X_FORWARDED_HOST'] and uri.host = host
-          port   = request.env['HTTP_X_FORWARDED_PORT'] and uri.port = port
+
+          if port = request.env['HTTP_X_FORWARDED_PORT']
+            if scheme == "https" && port != 443 ||
+                scheme == "http" && port != 80
+              uri.port = port
+            else
+              uri.port = nil
+            end
+          end
+
         # maybe some scripts use Rack::Request,
         #   but this should not be expected,
         #   and we don't care!
