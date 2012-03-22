@@ -2,6 +2,7 @@ module DAV
   module Convenience
     URI = Addressable::URI
     MAPPING = { '0' => 0, '1' => 1, 'infinity' => DAV::Infinity }
+    DEFAULT_CONTENT_TYPE = 'application/octet-stream'
 
     def depth(options)
       exceptions = Array options[:except]
@@ -30,7 +31,9 @@ module DAV
       properties.display_name
     end
     def content_type
-      properties.content_type
+      property = "#{ properties.content_type }"
+      return property if property =~ /\S/
+      DEFAULT_CONTENT_TYPE
     end
     def content_length
       properties.content_length
