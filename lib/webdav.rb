@@ -3,17 +3,17 @@ require 'nokogiri'
 require 'sinatra/base'
 
 module WebDAV
+
 end
 
-root = File.expand_path '..', __FILE__
-require "#{ root }/dav"
-require "#{ root }/webdav/verbs"
-require "#{ root }/webdav/statuses"
-require "#{ root }/webdav/convenience"
-require "#{ root }/webdav/base"
+require_relative "dav"
+require_relative "webdav/verbs"
+require_relative "webdav/statuses"
+require_relative "webdav/convenience"
+require_relative "webdav/base"
 
 if ENV['RACK_ENV'] == 'test'
-  require "#{ root }/litmus.rb"
+  require_relative "litmus"
 else
   module Litmus
     # noop
